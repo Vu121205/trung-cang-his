@@ -1,0 +1,4 @@
+interface:
+  display_name: "Trung Cang HIS UI"
+  short_description: "Tái sử dụng giao diện nghiệp vụ Trung Cang HIS"
+  default_prompt: "Dùng $trung-cang-his-ui để tạo hoặc chỉnh sửa màn hình theo phong cách giao diện Trung Cang HIS."
