@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+  <head th:replace="~{fragments/head :: head('Cấp thuốc')}"></head>
+  <body>
+    <nav th:replace="~{fragments/header :: header}"></nav>
+    <main class="container-fluid px-3 px-lg-4 py-3">
+      <div class="alert alert-info d-flex align-items-center gap-2 py-2 mb-3" role="status">
+        <i class="fa-solid fa-location-dot"></i>
+        <span>
+          Đang làm việc tại
+          <strong id="activeRoom">khoa dược vật tư y tế</strong>
+        </span>
+      </div>
+      <section class="page-section" id="section-pharmacy">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="fw-bold mb-0 text-dark">
+            <i class="fa-solid fa-pills text-success me-2"></i>
+            Phân Hệ Dược &amp; Cấp Phát Thuốc
+          </h5>
+        </div>
+        <div class="row g-3">
+          <!-- Danh sách đơn thuốc chờ xuất kho -->
+          <div class="col-lg-5">
+            <div class="card h-100">
+              <div class="card-header">
+                <i class="fa-solid fa-clipboard-list me-2"></i>
+                Đơn thuốc chờ xuất kho
+              </div>
+              <div class="card-body p-0">
+                <div class="alert alert-danger d-none m-3" id="dispensingMessage" role="alert"></div>
+                <div class="list-group list-group-flush" id="pharmacyQueueList"></div>
+              </div>
+            </div>
+          </div>
+          <!-- Chi tiết đơn thuốc xuất kho -->
+          <div class="col-lg-7">
+            <div class="card h-100">
+              <div class="card-header d-flex justify-content-between align-items-center">
+                <span>
+                  <i class="fa-solid fa-boxes-packing me-2"></i>
+                  Chi Tiết Cấp Thuốc &amp; Kiểm Kho
+                </span>
+                <span class="badge bg-outline-secondary" id="pharmacyPatientBadge">Chưa chọn đơn</span>
+              </div>
+              <div class="card-body">
+                <div class="alert alert-info py-2 mb-3">
+                  <strong>Bệnh nhân:</strong>
+                  <span id="pharmaPatientName">Chọn đơn thuốc đã thanh toán</span>
+                  <input type="hidden" id="pharmaPatientCode" />
+                  | Chẩn đoán:
+                  <span id="pharmaDiagnosis">—</span>
+                </div>
+                <div class="table-responsive mb-3">
+                  <table class="table table-bordered align-middle">
+                    <thead class="table-light">
+                      <tr>
+                        <th>STT</th>
+                        <th>Tên thuốc / Hàm lượng</th>
+                        <th class="text-center">Số lượng</th>
+                        <th>Đơn vị</th>
+                        <th class="text-center">Tồn kho</th>
+                        <th class="text-center">Trạng thái kho</th>
+                      </tr>
+                    </thead>
+                    <tbody id="pharmacyItemsBody"></tbody>
+                  </table>
+                </div>
+                <div class="p-3 bg-light rounded border mb-3">
+                  <div class="form-check">
+                    <input class="form-check-input" id="checkDispense" type="checkbox" />
+                    <label class="form-check-label fw-semibold" for="checkDispense">Xác nhận đã kiểm tra đúng tên thuốc, số lượng, hạn sử dụng và đóng gói đủ cho bệnh nhân.</label>
+                  </div>
+                </div>
+                <div class="text-end">
+                  <button class="btn btn-success px-4" id="confirmDispenseButton" onclick="confirmDispense()" disabled>
+                    <i class="fa-solid fa-box-open me-1"></i>
+                    Xác Nhận Xuất Kho &amp; Cấp Thuốc
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+    <div class="position-fixed bottom-0 end-0 p-3 toast-container">
+      <div id="liveToast" class="toast align-items-center text-white bg-success border-0" role="alert">
+        <div class="d-flex">
+          <div class="toast-body" id="toastMessage">Cập nhật dữ liệu thành công!</div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+      </div>
+    </div>
+    <script>
+      (function showActiveRoom() {
+        const params = new URLSearchParams(window.location.search);
+        let selection;
+        try {
+          selection = JSON.parse(localStorage.getItem('hisRoomSelection') || 'null');
+        } catch (error) {
+          selection = null;
+        }
+        const department = params.get('khoa') || (selection && selection.department);
+        const room = params.get('phong') || (selection && selection.room);
+        if (department && room) {
+          document.getElementById('activeRoom').textContent = `${room} (${department})`;
+          const roomHint = document.querySelector('.text-white-50');
+          if (roomHint) roomHint.textContent = room;
+        }
+      })();
+    </script>
+    <footer th:replace="~{fragments/footer :: footer}"></footer>
+    <th:block th:replace="~{fragments/footer :: scripts}"></th:block>
+  </body>
+</html>

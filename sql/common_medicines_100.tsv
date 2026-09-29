@@ -1,0 +1,101 @@
+active_ingredient	strength	dosage_form	unit
+Paracetamol	500 mg	Viên nén	Viên
+Paracetamol	250 mg	Viên nén	Viên
+Paracetamol	120 mg/5 mL	Dung dịch uống	Chai
+Ibuprofen	200 mg	Viên nén	Viên
+Ibuprofen	400 mg	Viên nén	Viên
+Ibuprofen	100 mg/5 mL	Hỗn dịch uống	Chai
+Acid acetylsalicylic	100 mg	Viên nén	Viên
+Acid acetylsalicylic	500 mg	Viên nén	Viên
+Loratadine	10 mg	Viên nén	Viên
+Loratadine	1 mg/mL	Dung dịch uống	Chai
+Prednisolone	5 mg	Viên nén	Viên
+Prednisolone	25 mg	Viên nén	Viên
+Dexamethasone	0.5 mg	Viên nén	Viên
+Dexamethasone	4 mg	Viên nén	Viên
+Hydrocortisone	100 mg	Bột pha tiêm	Lọ
+Amoxicillin	250 mg	Viên nang	Viên
+Amoxicillin	500 mg	Viên nang	Viên
+Amoxicillin	1 g	Viên nén	Viên
+Amoxicillin + acid clavulanic	500 mg + 125 mg	Viên nén	Viên
+Amoxicillin + acid clavulanic	875 mg + 125 mg	Viên nén	Viên
+Ampicillin	1 g	Bột pha tiêm	Lọ
+Cefalexin	250 mg	Viên nang	Viên
+Cefalexin	500 mg	Viên nang	Viên
+Cefazolin	1 g	Bột pha tiêm	Lọ
+Ceftriaxone	1 g	Bột pha tiêm	Lọ
+Cefotaxime	1 g	Bột pha tiêm	Lọ
+Doxycycline	100 mg	Viên nang	Viên
+Azithromycin	250 mg	Viên nén	Viên
+Azithromycin	500 mg	Viên nén	Viên
+Clarithromycin	250 mg	Viên nén	Viên
+Clarithromycin	500 mg	Viên nén	Viên
+Ciprofloxacin	250 mg	Viên nén	Viên
+Ciprofloxacin	500 mg	Viên nén	Viên
+Metronidazole	200 mg	Viên nén	Viên
+Metronidazole	400 mg	Viên nén	Viên
+Metronidazole	500 mg	Viên nén	Viên
+Nitrofurantoin	100 mg	Viên nang	Viên
+Sulfamethoxazole + trimethoprim	400 mg + 80 mg	Viên nén	Viên
+Sulfamethoxazole + trimethoprim	800 mg + 160 mg	Viên nén	Viên
+Sulfamethoxazole + trimethoprim	200 mg + 40 mg/5 mL	Hỗn dịch uống	Chai
+Cloxacillin	500 mg	Viên nang	Viên
+Clindamycin	150 mg	Viên nang	Viên
+Allopurinol	100 mg	Viên nén	Viên
+Fluconazole	50 mg	Viên nang	Viên
+Itraconazole	100 mg	Viên nang	Viên
+Griseofulvin	250 mg	Viên nén	Viên
+Miconazole	2%	Kem bôi da	Tuýp
+Nystatin	100000 IU/mL	Hỗn dịch uống	Chai
+Aciclovir	200 mg	Viên nén	Viên
+Aciclovir	200 mg/5 mL	Dung dịch uống	Chai
+Albendazole	400 mg	Viên nhai	Viên
+Mebendazole	100 mg	Viên nhai	Viên
+Mebendazole	500 mg	Viên nhai	Viên
+Ivermectin	3 mg	Viên nén	Viên
+Praziquantel	600 mg	Viên nén	Viên
+Amlodipine	5 mg	Viên nén	Viên
+Verapamil	40 mg	Viên nén	Viên
+Losartan	25 mg	Viên nén	Viên
+Losartan	50 mg	Viên nén	Viên
+Losartan	100 mg	Viên nén	Viên
+Enalapril	2.5 mg	Viên nén	Viên
+Enalapril	5 mg	Viên nén	Viên
+Enalapril	10 mg	Viên nén	Viên
+Verapamil	80 mg	Viên nén	Viên
+Hydrochlorothiazide	12.5 mg	Viên nén	Viên
+Hydrochlorothiazide	25 mg	Viên nén	Viên
+Furosemide	20 mg	Viên nén	Viên
+Furosemide	40 mg	Viên nén	Viên
+Spironolactone	25 mg	Viên nén	Viên
+Bisoprolol	1.25 mg	Viên nén	Viên
+Bisoprolol	5 mg	Viên nén	Viên
+Loperamide	2 mg	Viên nang	Viên
+Calcium nguyên tố	500 mg	Viên nén	Viên
+Simvastatin	10 mg	Viên nén	Viên
+Simvastatin	20 mg	Viên nén	Viên
+Simvastatin	40 mg	Viên nén	Viên
+Clopidogrel	75 mg	Viên nén	Viên
+Isosorbide dinitrate	5 mg	Viên ngậm dưới lưỡi	Viên
+Digoxin	250 microgam	Viên nén	Viên
+Metformin	500 mg	Viên nén	Viên
+Gliclazide	30 mg	Viên giải phóng có kiểm soát	Viên
+Gliclazide	60 mg	Viên giải phóng có kiểm soát	Viên
+Gliclazide	80 mg	Viên nén	Viên
+Omeprazole	10 mg	Viên nang bao tan trong ruột	Viên
+Omeprazole	20 mg	Viên nang bao tan trong ruột	Viên
+Omeprazole	40 mg	Viên nang bao tan trong ruột	Viên
+Metoclopramide	10 mg	Viên nén	Viên
+Ondansetron	4 mg	Viên nén	Viên
+Ondansetron	8 mg	Viên nén	Viên
+Lactulose	3.35 g/5 mL	Dung dịch uống	Chai
+Senna (sennosides)	7.5 mg	Viên nén	Viên
+Salbutamol	100 microgam/liều	Bình xịt định liều	Bình
+Budesonide	200 microgam/liều	Bình xịt định liều	Bình
+Budesonide	100 microgam/liều	Bình xịt định liều	Bình
+Levothyroxine	50 microgam	Viên nén	Viên
+Levothyroxine	100 microgam	Viên nén	Viên
+Acid folic	5 mg	Viên nén	Viên
+Acid ascorbic	50 mg	Viên nén	Viên
+Pyridoxine	25 mg	Viên nén	Viên
+Thiamine	50 mg	Viên nén	Viên

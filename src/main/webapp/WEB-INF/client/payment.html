@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+  <head th:replace="~{fragments/head :: head('Thanh toán')}"></head>
+  <body>
+    <nav th:replace="~{fragments/header :: header}"></nav>
+    <main class="container-fluid px-3 px-lg-4 py-3">
+      <div class="alert alert-info d-flex align-items-center gap-2 py-2 mb-3" role="status">
+        <i class="fa-solid fa-location-dot"></i>
+        <span>
+          Đang làm việc tại
+          <strong id="activeRoom">kế toán</strong>
+        </span>
+      </div>
+      <section class="page-section" id="section-cashier">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="fw-bold mb-0 text-dark">
+            <i class="fa-solid fa-receipt text-primary me-2"></i>
+            Phân Hệ Thanh Toán &amp; Thu Ngân
+          </h5>
+        </div>
+        <div class="row g-3">
+          <!-- Danh sách bệnh nhân chờ thanh toán -->
+          <div class="col-lg-4">
+            <div class="card h-100">
+              <div class="card-header">
+                <i class="fa-solid fa-user-clock me-2"></i>
+                Hàng chờ Thanh toán
+              </div>
+              <div class="card-body p-0">
+                <div class="alert alert-danger d-none m-3" id="billingMessage" role="alert"></div>
+                <div class="list-group list-group-flush" id="cashierQueueList"></div>
+              </div>
+            </div>
+          </div>
+          <!-- Bảng tổng hợp chi phí & Thanh toán -->
+          <div class="col-lg-8">
+            <div class="card h-100">
+              <div class="card-header d-flex justify-content-between align-items-center">
+                <span>
+                  <i class="fa-solid fa-calculator me-2"></i>
+                  Bảng Tổng Hợp Chi Phí Khám Chữa Bệnh
+                </span>
+                <span class="text-muted small">
+                  Mã lượt khám:
+                  <span id="billVisitCode">—</span>
+                </span>
+              </div>
+              <div class="card-body">
+                <div class="row mb-3">
+                  <div class="col-md-6">
+                    <div class="small text-muted">
+                      Bệnh nhân:
+                      <strong class="text-dark" id="billPatientName">Chọn người bệnh</strong>
+                      <input type="hidden" id="billPatientCode" />
+                    </div>
+                    <div class="small text-muted">
+                      Mã BN:
+                      <strong id="billPatientCodeLabel">—</strong>
+                      | Đối tượng:
+                      <strong>Dịch vụ</strong>
+                    </div>
+                  </div>
+                  <div class="col-md-6 text-end">
+                    <div class="small text-muted">
+                      Ngày lập:
+                      <strong id="billDate">—</strong>
+                    </div>
+                    <div class="small text-muted">
+                      Thu ngân:
+                      <strong id="billCashier">—</strong>
+                    </div>
+                  </div>
+                </div>
+                <div class="table-responsive mb-3">
+                  <table class="table table-bordered align-middle">
+                    <thead class="table-light">
+                      <tr>
+                        <th>Nội dung thanh toán</th>
+                        <th class="text-center" style="width: 80px">SL</th>
+                        <th class="text-end" style="width: 140px">Đơn giá</th>
+                        <th class="text-end" style="width: 140px">Thành tiền</th>
+                      </tr>
+                    </thead>
+                    <tbody id="billItemsBody"></tbody>
+                    <tfoot>
+                      <tr class="table-light fs-6">
+                        <td class="text-end fw-bold" colspan="3">TỔNG CỘNG THANH TOÁN:</td>
+                        <td class="text-end fw-bold text-danger fs-5" id="billGrandTotal">0 VNĐ</td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+                <!-- Phương thức thanh toán -->
+                <div class="card bg-light border p-3 mb-3">
+                  <label class="form-label fw-bold mb-2">Hình thức thanh toán</label>
+                  <div class="d-flex gap-4">
+                    <div class="form-check">
+                      <input checked="" class="form-check-input" id="payCash" name="paymentMode" onchange="toggleQrModal(false)" type="radio" />
+                      <label class="form-check-label fw-semibold" for="payCash">
+                        <i class="fa-solid fa-money-bill-wave text-success me-1"></i>
+                        Tiền mặt
+                      </label>
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input" id="payQr" name="paymentMode" onchange="toggleQrModal(true)" type="radio" />
+                      <label class="form-check-label fw-semibold" for="payQr">
+                        <i class="fa-solid fa-qrcode text-primary me-1"></i>
+                        Chuyển khoản ngân hàng
+                      </label>
+                    </div>
+                  </div>
+                  <!-- VietQR Display Block (Hidden by default) -->
+                  <div class="mt-3 text-center d-none" id="qrCodeBlock">
+                    <div class="alert alert-warning mb-0">Chưa cấu hình thông tin tài khoản để tạo mã QR. Giao dịch chuyển khoản sẽ được ghi nhận là chuyển khoản ngân hàng.</div>
+                  </div>
+                </div>
+                <div class="d-flex justify-content-end gap-2">
+                  <button class="btn btn-outline-secondary" onclick="openPrintModal()">
+                    <i class="fa-solid fa-print me-1"></i>
+                    Xem &amp; In Phiếu Thu
+                  </button>
+                  <button class="btn btn-primary px-4" id="confirmPaymentButton" onclick="confirmPayment()" disabled>
+                    <i class="fa-solid fa-circle-check me-1"></i>
+                    Xác Nhận Đã Thu Tiền
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+    <script>
+      (function showActiveRoom() {
+        const params = new URLSearchParams(window.location.search);
+        let selection;
+        try {
+          selection = JSON.parse(localStorage.getItem('hisRoomSelection') || 'null');
+        } catch (error) {
+          selection = null;
+        }
+        const department = params.get('khoa') || (selection && selection.department);
+        const room = params.get('phong') || (selection && selection.room);
+        if (department && room) {
+          document.getElementById('activeRoom').textContent = `${room} (${department})`;
+          const roomHint = document.querySelector('.text-white-50');
+          if (roomHint) roomHint.textContent = room;
+        }
+      })();
+    </script>
+    <div aria-hidden="true" class="modal fade" id="printInvoiceModal" tabindex="-1">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title fw-bold">
+              <i class="fa-solid fa-print me-2"></i>
+              Xem Trước Phiếu Thu Thanh Toán
+            </h5>
+            <button aria-label="Close" class="btn-close" data-bs-dismiss="modal" type="button"></button>
+          </div>
+          <div class="modal-body" id="printableArea">
+            <div class="p-3 text-dark">
+              <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+                <div>
+                  <h4 class="fw-bold mb-0 text-primary">PHÒNG KHÁM ĐA KHOA MEDICARE</h4>
+                  <div class="small">Địa chỉ: 123 Đường Nguyễn Trãi, Quận 1, TP. Hồ Chí Minh</div>
+                  <div class="small">Hotline: (028) 3999 8888 - Email: info@medicare.vn</div>
+                </div>
+                <div class="text-end">
+                  <h5 class="fw-bold mb-0">PHIẾU THU TIỀN</h5>
+                  <div class="small text-muted">
+                    Mã lượt khám:
+                    <span id="invVisitCode">—</span>
+                  </div>
+                  <div class="small text-muted">
+                    Ngày:
+                    <span id="invDate">—</span>
+                  </div>
+                </div>
+              </div>
+              <div class="row mb-3">
+                <div class="col-6">
+                  <div>
+                    Họ tên người bệnh:
+                    <strong id="invPtName">—</strong>
+                  </div>
+                  <div>
+                    Mã số BN:
+                    <strong id="invPtCode">—</strong>
+                  </div>
+                </div>
+                <div class="col-6 text-end">
+                  <div>
+                    Giới tính / Năm sinh:
+                    <strong>—</strong>
+                  </div>
+                  <div>
+                    Hình thức thanh toán:
+                    <strong id="invPayMethod">—</strong>
+                  </div>
+                </div>
+              </div>
+              <table class="table table-bordered mb-3">
+                <thead>
+                  <tr class="table-light">
+                    <th>STT</th>
+                    <th>Danh mục dịch vụ / Thuốc</th>
+                    <th class="text-center">SL</th>
+                    <th class="text-end">Đơn giá</th>
+                    <th class="text-end">Thành tiền</th>
+                  </tr>
+                </thead>
+                <tbody id="invoiceItemsBody"></tbody>
+              </table>
+              <div class="d-flex justify-content-between align-items-center mb-4 fs-6">
+                <span class="fw-bold">TỔNG TIỀN THU:</span>
+                <span class="fw-bold text-danger fs-5" id="invTotalAmount">0 VNĐ</span>
+              </div>
+              <div class="row text-center mt-5">
+                <div class="col-6">
+                  <div class="fw-semibold">Người nộp tiền</div>
+                  <div class="small text-muted mb-5">(Ký và ghi rõ họ tên)</div>
+                </div>
+                <div class="col-6">
+                  <div class="fw-semibold">Thu ngân xác nhận</div>
+                  <div class="small text-muted mb-5">(Ký và ghi rõ họ tên)</div>
+                  <div class="fw-bold text-primary" id="invCashier">—</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" data-bs-dismiss="modal" type="button">Đóng</button>
+            <button class="btn btn-primary" onclick="window.print()" type="button">
+              <i class="fa-solid fa-print me-1"></i>
+              In Phiếu Thu
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="position-fixed bottom-0 end-0 p-3 toast-container">
+      <div id="liveToast" class="toast align-items-center text-white bg-success border-0" role="alert">
+        <div class="d-flex">
+          <div class="toast-body" id="toastMessage">Cập nhật dữ liệu thành công!</div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+      </div>
+    </div>
+    <footer th:replace="~{fragments/footer :: footer}"></footer>
+    <th:block th:replace="~{fragments/footer :: scripts}"></th:block>
+  </body>
+</html>

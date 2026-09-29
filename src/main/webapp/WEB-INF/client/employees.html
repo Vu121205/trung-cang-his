@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+  <head th:replace="~{fragments/head :: head('Quản lý nhân viên')}"></head>
+  <body>
+    <input type="hidden" id="staffCsrfToken" th:value="${_csrf.token}" />
+    <input type="hidden" id="staffCsrfHeader" th:value="${_csrf.headerName}" />
+    <nav th:replace="~{fragments/header :: header}"></nav>
+    <main class="container-fluid px-3 px-lg-4 py-3">
+      <section class="page-section">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+          <div><h5 class="page-title mb-1"><i class="fa-solid fa-users-gear text-primary me-2"></i>Quản lý nhân viên</h5>
+            <p class="text-muted small mb-0">Thông tin hành chính, tài khoản và phân quyền người dùng.</p></div>
+          <button id="addEmployee" class="btn btn-primary" type="button" disabled><i class="fa-solid fa-plus me-1"></i>Thêm nhân viên</button>
+        </div>
+        <div id="staffMessage" role="status" aria-live="polite" class="d-none"></div>
+        <div class="row g-2 mb-3">
+          <div class="col-md-6"><label for="staffSearch" class="form-label">Tìm nhân viên</label><input id="staffSearch" class="form-control" type="search" placeholder="Họ tên, mã nhân viên, tài khoản, số điện thoại" /></div>
+          <div class="col-md-3"><label for="staffRoleFilter" class="form-label">Nhóm quyền</label><select id="staffRoleFilter" class="form-select"><option value="">Tất cả nhóm quyền</option></select></div>
+          <div class="col-md-3"><label for="staffStatusFilter" class="form-label">Trạng thái tài khoản</label><select id="staffStatusFilter" class="form-select"><option value="">Tất cả trạng thái</option><option value="ACTIVE">Hoạt động</option><option value="INACTIVE">Đã khóa</option></select></div>
+        </div>
+        <p id="staffCount" class="text-muted small" aria-live="polite">Đang tải danh sách...</p>
+        <div class="table-responsive"><table class="table table-hover align-middle">
+          <thead><tr><th>Mã NV</th><th>Họ tên / Chức vụ</th><th>Liên hệ</th><th>Tài khoản</th><th>Nhóm quyền</th><th>Trạng thái</th><th>Thao tác</th></tr></thead>
+          <tbody id="staffRows"></tbody>
+        </table></div>
+      </section>
+
+      <section id="staffEditor" class="page-section mt-3" hidden aria-labelledby="staffEditorTitle">
+        <h5 id="staffEditorTitle" tabindex="-1">Thêm nhân viên</h5>
+        <p class="small text-muted">Các trường có dấu * là bắt buộc.</p>
+        <form id="staffForm">
+          <div class="row g-3">
+            <div class="col-md-6"><label class="form-label" for="staffFullName">Họ và tên *</label><input id="staffFullName" name="fullName" class="form-control" maxlength="150" required /></div>
+            <div class="col-md-3"><label class="form-label" for="staffCode">Mã nhân viên</label><input id="staffCode" name="employeeCode" class="form-control" maxlength="50" /></div>
+            <div class="col-md-3"><label class="form-label" for="staffBirth">Ngày sinh</label><input id="staffBirth" name="dateOfBirth" type="date" class="form-control" /></div>
+            <div class="col-md-3"><label class="form-label" for="staffGender">Giới tính</label><select id="staffGender" name="gender" class="form-select"><option value="">Chưa chọn</option><option value="MALE">Nam</option><option value="FEMALE">Nữ</option><option value="OTHER">Khác</option></select></div>
+            <div class="col-md-3"><label class="form-label" for="staffIdentity">CCCD / Giấy tờ tùy thân</label><input id="staffIdentity" name="identityNumber" class="form-control" maxlength="20" /></div>
+            <div class="col-md-3"><label class="form-label" for="staffPhone">Số điện thoại</label><input id="staffPhone" name="phone" type="tel" class="form-control" maxlength="20" pattern="[+0-9() .\-]*" /></div>
+            <div class="col-md-3"><label class="form-label" for="staffEmail">Email</label><input id="staffEmail" name="email" type="email" class="form-control" maxlength="150" /></div>
+            <div class="col-12"><label class="form-label" for="staffAddress">Địa chỉ</label><input id="staffAddress" name="address" class="form-control" maxlength="500" /></div>
+            <div class="col-md-4"><label class="form-label" for="staffDepartment">Khoa / Bộ phận</label><input id="staffDepartment" name="department" class="form-control" maxlength="150" /></div>
+            <div class="col-md-4"><label class="form-label" for="staffJob">Chức vụ</label><input id="staffJob" name="jobTitle" class="form-control" maxlength="150" /></div>
+            <div class="col-md-4"><label class="form-label" for="staffSpecialization">Chuyên môn</label><input id="staffSpecialization" name="specialization" class="form-control" maxlength="150" /></div>
+            <div class="col-md-4"><label class="form-label" for="staffUsername">Tên đăng nhập *</label><input id="staffUsername" class="form-control" maxlength="100" pattern="[a-zA-Z0-9._\-]+" autocomplete="off" required /><div class="form-text">Chữ không dấu, số, dấu chấm, gạch dưới hoặc gạch ngang. Không đổi sau khi tạo.</div></div>
+            <div class="col-md-4"><label class="form-label" for="staffRole">Nhóm quyền *</label><select id="staffRole" name="roleCode" class="form-select" required></select></div>
+            <div class="col-md-4"><label class="form-label" for="staffStatus">Trạng thái *</label><select id="staffStatus" name="status" class="form-select" required><option value="ACTIVE">Hoạt động</option><option value="INACTIVE">Đã khóa</option></select></div>
+            <div class="col-12"><p id="staffRoleHelp" class="alert alert-info mb-0 small"></p></div>
+            <div id="initialPasswordFields" class="col-12"><div class="row g-3">
+              <div class="col-md-6"><label class="form-label" for="staffPassword">Mật khẩu tài khoản *</label><input id="staffPassword" type="password" class="form-control" minlength="8" maxlength="72" autocomplete="new-password" /><div class="form-text">Tối thiểu 8 ký tự; tối đa 72 byte UTF-8.</div></div>
+              <div class="col-md-6"><label class="form-label" for="staffPasswordConfirm">Nhập lại mật khẩu *</label><input id="staffPasswordConfirm" type="password" class="form-control" autocomplete="new-password" /></div>
+            </div></div>
+          </div>
+          <div id="staffFormError" class="text-danger mt-3" role="alert"></div>
+          <div class="d-flex gap-2 mt-3"><button class="btn btn-primary" type="submit">Lưu nhân viên</button><button class="btn btn-outline-secondary" type="button" id="cancelEmployee">Hủy</button></div>
+        </form>
+      </section>
+
+      <section id="passwordEditor" class="page-section mt-3" hidden aria-labelledby="passwordTitle">
+        <h5 id="passwordTitle" tabindex="-1">Đổi mật khẩu</h5>
+        <p class="small text-muted">Sau khi đổi mật khẩu, nhân viên phải đăng nhập lại trên các thiết bị.</p>
+        <form id="passwordForm">
+          <div class="row g-3">
+            <div class="col-md-6"><label for="newStaffPassword" class="form-label">Mật khẩu mới *</label><input id="newStaffPassword" class="form-control" type="password" minlength="8" maxlength="72" autocomplete="new-password" required /></div>
+            <div class="col-md-6"><label for="confirmStaffPassword" class="form-label">Nhập lại mật khẩu *</label><input id="confirmStaffPassword" class="form-control" type="password" autocomplete="new-password" required /></div>
+          </div>
+          <div id="passwordError" class="text-danger mt-3" role="alert"></div>
+          <div class="d-flex gap-2 mt-3"><button class="btn btn-primary" type="submit">Đổi mật khẩu</button><button id="cancelPassword" class="btn btn-outline-secondary" type="button">Hủy</button></div>
+        </form>
+      </section>
+    </main>
+    <footer th:replace="~{fragments/footer :: footer}"></footer>
+    <th:block th:replace="~{fragments/footer :: scripts}"></th:block>
+    <script src="/resources/js/employees.js"></script>
+  </body>
+</html>

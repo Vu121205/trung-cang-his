@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+  <head th:replace="~{fragments/head :: head('Đăng nhập')}"></head>
+  <body class="login-page">
+    <div class="login-shell">
+      <div class="card login-card">
+        <div class="card-body p-4">
+          <div class="text-center mb-4">
+            <i class="fa-solid fa-hospital-user text-primary fs-1"></i>
+            <h3 class="fw-bold mt-2 mb-1">
+              TRUNG CANG
+              <span class="text-primary">HIS</span>
+            </h3>
+            <div class="text-muted">Hệ thống quản lý phòng khám</div>
+          </div>
+          <form id="loginForm">
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Tên đăng nhập</label>
+              <input id="username" class="form-control" required placeholder="Nhập tên đăng nhập" autocomplete="username" />
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Mật khẩu</label>
+              <input id="password" type="password" class="form-control" required placeholder="Nhập mật khẩu" autocomplete="current-password" />
+            </div>
+            <div class="form-check mb-3">
+              <input class="form-check-input" type="checkbox" id="remember" />
+              <label class="form-check-label" for="remember">Ghi nhớ đăng nhập</label>
+            </div>
+            <button class="btn btn-primary w-100 py-2 fw-semibold">Đăng nhập</button>
+          </form>
+          <div id="loginMessage" class="text-center text-muted small mt-3">Mật khẩu tài khoản nhân sự: pkdktc68@</div>
+          <div class="text-center text-muted small mt-2">Tài khoản: admin · bacsi · duocsi · letan</div>
+        </div>
+      </div>
+    </div>
+    <footer th:replace="~{fragments/footer :: footer}"></footer>
+    <th:block th:replace="~{fragments/footer :: scripts}"></th:block>
+  </body>
+</html>

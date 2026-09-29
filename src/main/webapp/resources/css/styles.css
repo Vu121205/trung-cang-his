@@ -1,0 +1,185 @@
+:root {
+  --bs-body-font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  --med-primary: #0284c7;
+  --med-primary-dark: #0369a1;
+  --med-navy: #0f172a;
+  --med-surface: #f8fafc;
+  --med-card-border: #e2e8f0;
+}
+
+body {
+  background-color: #f1f5f9;
+  color: #334155;
+  font-size: 0.925rem;
+}
+
+input::placeholder,
+textarea::placeholder {
+  font-size: 0.78rem;
+  color: #94a3b8;
+  opacity: 1;
+  transition: opacity 0.15s ease;
+}
+
+input:focus::placeholder,
+textarea:focus::placeholder {
+  opacity: 0;
+}
+
+/* Page Section Styles */
+.page-section {
+  display: block;
+}
+
+.page-title {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+/* Top Navigation Styling */
+.med-navbar {
+  background-color: var(--med-navy);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.med-navbar .navbar-brand {
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.5px;
+}
+
+.med-navbar .nav-link {
+  color: #94a3b8;
+  font-weight: 500;
+  padding: 0.65rem 1rem;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+  margin: 0 0.15rem;
+}
+
+.med-navbar .nav-link:hover {
+  color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.med-navbar .nav-link.active {
+  color: #ffffff !important;
+  background-color: var(--med-primary) !important;
+  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.4);
+}
+
+/* Card & UI Containers */
+.card {
+  border: 1px solid var(--med-card-border);
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  background-color: #ffffff;
+}
+
+.card-header {
+  background-color: #ffffff;
+  border-bottom: 1px solid var(--med-card-border);
+  padding: 0.85rem 1.25rem;
+  font-weight: 600;
+}
+
+.badge-status-waiting {
+  background-color: #fef3c7;
+  color: #d97706;
+  font-weight: 600;
+}
+
+.badge-status-examining {
+  background-color: #e0f2fe;
+  color: #0369a1;
+  font-weight: 600;
+}
+
+.badge-status-done {
+  background-color: #dcfce7;
+  color: #15803d;
+  font-weight: 600;
+}
+
+.required-mark {
+  color: #dc3545;
+  font-weight: 700;
+}
+
+.vital-card {
+  background-color: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 0.5rem;
+  padding: 0.6rem;
+  text-align: center;
+}
+
+.vital-card .vital-val {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.table-custom th {
+  background-color: #f8fafc;
+  color: #475569;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.5px;
+}
+
+.section-view {
+  display: none;
+}
+
+.section-view.active {
+  display: block;
+}
+
+/* Toast Container */
+.toast-container {
+  z-index: 1090;
+}
+
+/* Login Page Custom Styles */
+body.login-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+}
+
+.login-shell {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.login-card {
+  width: 420px;
+  max-width: 92vw;
+  margin: 0 auto;
+  border-radius: 1rem;
+}
+
+/* Printable Area Customization */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #printableArea,
+  #printableArea * {
+    visibility: visible;
+  }
+  #printableArea {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+}

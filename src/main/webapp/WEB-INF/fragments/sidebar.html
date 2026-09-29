@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+  <body>
+    <ul th:fragment="sidebar" class="navbar-nav me-auto mb-2 mb-lg-0 mt-2 mt-lg-0 ms-lg-3">
+      <li class="nav-item" th:if="${canManageStaff}">
+        <a class="nav-link" href="/employees">
+          <i class="fa-solid fa-users-gear me-1"></i>Quản lý nhân viên
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="/rooms">
+          <i class="fa-solid fa-door-open me-1"></i>
+          Thiết lập phòng
+        </a>
+      </li>
+      <li class="nav-item" th:if="${canReceive}">
+        <a class="nav-link" href="/reception">
+          <i class="fa-solid fa-clipboard-user me-1"></i>
+          Tiếp nhận
+        </a>
+      </li>
+      <li class="nav-item" th:if="${canExamine}">
+        <a class="nav-link" href="/examination">
+          <i class="fa-solid fa-user-doctor me-1"></i>
+          Khám bệnh
+        </a>
+      </li>
+      <li class="nav-item" th:if="${canDispense}">
+        <a class="nav-link" href="/pharmacy">
+          <i class="fa-solid fa-pills me-1"></i>
+          Cấp thuốc
+        </a>
+      </li>
+      <li class="nav-item" th:if="${canDispense}">
+        <a class="nav-link" href="/payment">
+          <i class="fa-solid fa-receipt me-1"></i>
+          Thanh toán
+        </a>
+      </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/examination-history">
+                <i class="fa-solid fa-clock-rotate-left me-1"></i>
+                Lịch sử khám bệnh
+              </a>
+            </li>
+          </ul>
+  </body>
+</html>

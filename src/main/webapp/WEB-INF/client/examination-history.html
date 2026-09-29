@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+  <head th:replace="~{fragments/head :: head('Lịch sử khám bệnh')}"></head>
+  <body>
+    <nav th:replace="~{fragments/header :: header}"></nav>
+    <main class="container-fluid px-3 px-lg-4 py-3">
+      <h5 class="fw-bold mb-3"><i class="fa-solid fa-clock-rotate-left text-primary me-2"></i>Lịch sử khám bệnh</h5>
+      <section class="card mb-3">
+        <div class="card-body">
+          <form id="historyFilters" class="row g-3 align-items-end">
+            <div class="col-md-5"><label for="historyQuery" class="form-label">Bệnh nhân</label><input id="historyQuery" class="form-control" type="search" placeholder="Mã bệnh nhân, họ tên hoặc số điện thoại" maxlength="150" /></div>
+            <div class="col-md-2"><label for="historyFrom" class="form-label">Từ ngày</label><input id="historyFrom" class="form-control" type="date" /></div>
+            <div class="col-md-2"><label for="historyTo" class="form-label">Đến ngày</label><input id="historyTo" class="form-control" type="date" /></div>
+            <div class="col-md-3 d-flex gap-2"><button class="btn btn-primary" type="submit">Tìm kiếm</button><button class="btn btn-outline-secondary" type="reset">Xóa bộ lọc</button></div>
+          </form>
+        </div>
+      </section>
+      <div id="historyMessage" class="alert alert-danger d-none" role="alert"></div>
+      <section class="card">
+        <div class="card-header d-flex justify-content-between"><span>Danh sách hồ sơ khám</span><span id="historyCount" aria-live="polite"></span></div>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light"><tr><th>Ngày khám</th><th>Mã BN</th><th>Họ tên</th><th>Số điện thoại</th><th>Phòng khám</th><th>Người khám</th><th>Chẩn đoán</th><th>Trạng thái</th><th>Chi tiết</th></tr></thead>
+            <tbody id="historyRows"><tr><td colspan="9" class="text-center py-4">Đang tải lịch sử khám...</td></tr></tbody>
+          </table>
+        </div>
+        <div class="card-footer d-flex justify-content-between align-items-center"><button id="historyPrevious" class="btn btn-outline-secondary btn-sm" disabled>Trang trước</button><span id="historyPage" aria-live="polite"></span><button id="historyNext" class="btn btn-outline-secondary btn-sm" disabled>Trang sau</button></div>
+      </section>
+      <section id="historyDetail" class="card mt-3 d-none" tabindex="-1" aria-label="Chi tiết hồ sơ khám">
+        <div class="card-header d-flex justify-content-between align-items-center"><span id="historyDetailTitle">Chi tiết hồ sơ</span><button id="historyClose" class="btn btn-outline-secondary btn-sm">Đóng</button></div>
+        <div id="historyDetailBody" class="card-body"></div>
+      </section>
+    </main>
+    <footer th:replace="~{fragments/footer :: footer}"></footer>
+    <th:block th:replace="~{fragments/footer :: scripts}"></th:block>
+    <script src="/resources/js/examination-history.js"></script>
+  </body>
+</html>

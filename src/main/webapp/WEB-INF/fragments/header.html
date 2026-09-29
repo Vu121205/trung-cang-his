@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<body>
+<nav th:fragment="header" class="navbar navbar-expand-lg navbar-dark med-navbar sticky-top">
+      <div class="container-fluid px-3 px-lg-4">
+        <a class="navbar-brand d-flex align-items-center" href="/rooms">
+          <i class="fa-solid fa-hospital-user text-info me-2 fs-4"></i>
+          <span>
+            MEDICARE
+            <span class="text-info">HIS</span>
+          </span>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar"><span class="navbar-toggler-icon"></span></button>
+        <div class="collapse navbar-collapse" id="mainNavbar">
+          <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+          <div class="d-flex align-items-center text-white">
+            <div class="text-end me-3 d-none d-sm-block">
+              <div class="fw-semibold" id="currentUserName">Đang tải...</div>
+              <div class="text-white-50 small">Trung Cang HIS</div>
+              <button class="btn btn-link btn-sm text-white-50 p-0" type="button" onclick="logout()">
+                <i class="fa-solid fa-right-from-bracket me-1"></i>Đăng xuất
+              </button>
+            </div>
+            <div class="rounded-circle bg-primary text-white p-2 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px"><i class="fa-solid fa-user-doctor"></i></div>
+          </div>
+        </div>
+      </div>
+    </nav>
+</body>
+</html>

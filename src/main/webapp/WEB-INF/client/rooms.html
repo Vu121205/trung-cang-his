@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+  <head th:replace="~{fragments/head :: head('Thiết lập phòng')}"></head>
+  <body>
+    <nav th:replace="~{fragments/header :: header}"></nav>
+    <main class="container-fluid px-3 px-lg-4 py-3">
+      <section class="page-section">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="page-title mb-0">
+            <i class="fa-solid fa-door-open text-primary me-2"></i>
+            Nhập khoa và phòng
+          </h5>
+        </div>
+        <div class="row justify-content-center">
+          <div class="col-md-8 col-lg-6">
+            <div class="card">
+              <div class="card-header">Thông tin khoa và phòng</div>
+              <div class="card-body">
+                <form id="roomForm" onsubmit="saveRoomSelection(event)">
+                  <div class="mb-3">
+                    <label class="form-label" for="roomDepartment">Khoa</label>
+                    <select id="roomDepartment" class="form-select" required onchange="updateRoomOptions()">
+                      <option value="">-- Chọn khoa --</option>
+                      <option th:if="${canExamine}" value="Khoa khám bệnh">Khoa khám bệnh</option>
+                      <option th:if="${canReceive}" value="Khoa tiếp nhận">Khoa tiếp nhận</option>
+                      <option th:if="${canDispense}" value="Khoa dược vật tư y tế">Khoa dược vật tư y tế</option>
+                      <option th:if="${canDispense}" value="Kế toán">Kế toán</option>
+                    </select>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label" for="roomName">Phòng</label>
+                    <select id="roomName" class="form-select" required disabled>
+                      <option value="">-- Chọn khoa trước --</option>
+                    </select>
+                  </div>
+                  <button class="btn btn-primary w-100" type="submit">
+                    <i class="fa-solid fa-check me-1"></i>
+                    Xác nhận
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <script>
+        let roomOptionsRequest = 0;
+        async function updateRoomOptions() {
+          const request = ++roomOptionsRequest;
+          const department = document.getElementById('roomDepartment').value;
+          const select = document.getElementById('roomName');
+          select.disabled = true;
+          select.replaceChildren(new Option('-- Đang tải phòng --', ''));
+          try {
+            const rooms = department === 'Khoa khám bệnh'
+              ? (await apiRequest('/examination-rooms')).filter((room) => room.status === 'ACTIVE').map((room) => room.name)
+              : department === 'Khoa tiếp nhận' ? ['Phòng tiếp nhận'] : department ? [department] : [];
+            if (request !== roomOptionsRequest) return;
+            select.replaceChildren(new Option('-- Chọn phòng --', ''));
+            rooms.forEach((room) => select.add(new Option(room, room)));
+            select.disabled = !rooms.length;
+          } catch (error) { if (request === roomOptionsRequest) alert(error.message); }
+        }
+
+        function saveRoomSelection(event) {
+          event.preventDefault();
+          const department = document.getElementById('roomDepartment').value;
+          const room = document.getElementById('roomName').value;
+          const destinations = {
+            'Khoa khám bệnh': '/examination',
+            'Khoa tiếp nhận': '/reception',
+            'Khoa dược vật tư y tế': '/pharmacy',
+            'Kế toán': '/payment'
+          };
+          const destination = destinations[department];
+
+          if (!destination || !room) {
+            return;
+          }
+
+          const selection = { department, room };
+          localStorage.setItem('hisRoomSelection', JSON.stringify(selection));
+          window.location.href = `${destination}?khoa=${encodeURIComponent(department)}&phong=${encodeURIComponent(room)}`;
+        }
+      </script>
+    </main>
+    <footer th:replace="~{fragments/footer :: footer}"></footer>
+    <th:block th:replace="~{fragments/footer :: scripts}"></th:block>
+  </body>
+</html>
