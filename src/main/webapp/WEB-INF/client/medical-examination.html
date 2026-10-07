@@ -1,184 +1,202 @@
 <!doctype html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
-  <head th:replace="~{fragments/head :: head('Khám bệnh')}"></head>
-  <body>
-    <nav th:replace="~{fragments/header :: header}"></nav>
-    <main class="container-fluid px-3 px-lg-4 py-3">
-      <div class="alert alert-info d-flex align-items-center gap-2 py-2 mb-3">
-        <i class="fa-solid fa-location-dot"></i>
+
+<head th:replace="~{fragments/head :: head('Khám bệnh')}"></head>
+
+<body>
+  <nav th:replace="~{fragments/header :: header}"></nav>
+  <main class="container-fluid px-3 px-lg-4 py-3">
+    <div class="alert alert-info d-flex align-items-center gap-2 py-2 mb-3">
+      <i class="fa-solid fa-location-dot"></i>
+      <span>
+        Đang làm việc tại
+        <strong id="examRoomLabel">phòng khám</strong>
+      </span>
+    </div>
+    <section id="patient-list" class="card mb-3">
+      <div class="card-header d-flex justify-content-between align-items-center">
         <span>
-          Đang làm việc tại
-          <strong id="examRoomLabel">phòng khám</strong>
+          <i class="fa-solid fa-list-check text-primary me-2"></i>
+          Hàng chờ khám
+        </span>
+        <span class="badge bg-primary">Ưu tiên bệnh nhân đã tiếp nhận</span>
+      </div>
+      <div class="card-body">
+        <div class="row g-2 mb-3">
+          <div class="col-md-3">
+            <label class="form-label small mb-1">Từ ngày</label>
+            <input id="examFrom" class="form-control form-control-sm" type="date" />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label small mb-1">Đến ngày</label>
+            <input id="examTo" class="form-control form-control-sm" type="date" />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label small mb-1">Mã bệnh nhân</label>
+            <input id="examSearch" class="form-control form-control-sm" placeholder="Nhập mã BN..." type="search" />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label small mb-1">Trạng thái</label>
+            <select id="examStatusFilter" class="form-select form-select-sm">
+              <option value="ALL">Tất cả trạng thái</option>
+              <option value="WAITING">Chờ khám</option>
+              <option value="EXAMINING">Đang khám</option>
+              <option value="ENDED">Kết thúc</option>
+            </select>
+          </div>
+        </div>
+        <div id="examQueueMessage" class="small text-muted mb-2" role="status"></div>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>STT</th>
+                <th>Mã BN</th>
+                <th>Họ tên</th>
+                <th>Phòng</th>
+                <th>Trạng thái</th>
+                <th class="text-end">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody id="examinationQueueBody">
+              <tr>
+                <td colspan="6" class="text-center text-muted py-4">Đang tải hàng chờ...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+    <section id="clinical" class="card mb-3">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span>
+          <i class="fa-solid fa-stethoscope text-primary me-2"></i>
+          Hồ sơ khám bệnh
+        </span>
+        <span class="badge bg-light text-dark border">
+          Mã BN:
+          <input id="examPatientCode" class="border-0 bg-transparent fw-bold" value="" readonly style="width: 92px" />
         </span>
       </div>
-      <div class="card mb-3">
-        <div class="card-body py-2">
-          <div class="d-flex flex-wrap gap-2">
-            <a class="btn btn-primary btn-sm" href="#patient-list">
-              <i class="fa-solid fa-users me-1"></i>
-              Danh sách bệnh nhân
-            </a>
-            <a class="btn btn-outline-primary btn-sm" href="#clinical">
-              <i class="fa-solid fa-file-medical me-1"></i>
-              Bệnh án
-            </a>
-            <a class="btn btn-outline-primary btn-sm" href="#orders">
-              <i class="fa-solid fa-flask me-1"></i>
-              CLS & thuốc
-            </a>
-            <a class="btn btn-outline-primary btn-sm" href="/payment" th:if="${canDispense}">
-              <i class="fa-solid fa-receipt me-1"></i>
-              Viện phí
-            </a>
+      <div class="card-body">
+        <div class="row g-3 mb-3">
+          <div class="col-md-4">
+            <div class="text-muted small">Bệnh nhân</div>
+            <div class="fs-5 fw-bold text-primary" id="docPatientName">Chưa chọn bệnh nhân</div>
+            <div class="small text-secondary" id="docPatientMeta">Chọn bệnh nhân trong hàng chờ để bắt đầu</div>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label small">Huyết áp</label>
+            <input class="form-control" id="docBloodPressure" inputmode="decimal" placeholder="120/80" />
+          </div>
+          <div class="col-md-2">
+            <label class="form-label small">Mạch</label>
+            <input class="form-control" id="docPulse" type="number" min="0" max="300" step="1" inputmode="numeric"
+              placeholder="lần/phút" />
+          </div>
+          <div class="col-md-2">
+            <label class="form-label small">Nhiệt độ</label>
+            <input class="form-control" id="docTemperature" type="number" min="25" max="45" step="0.1"
+              inputmode="decimal" placeholder="°C" />
+          </div>
+          <div class="col-md-2">
+            <label class="form-label small">Cân nặng</label>
+            <input class="form-control" id="docWeight" type="number" min="0.1" max="500" step="0.1" inputmode="decimal"
+              placeholder="kg" />
+          </div>
+        </div>
+        <div class="row g-3">
+          <div class="col-lg-6">
+            <label class="form-label fw-semibold">Triệu chứng / lý do khám</label>
+            <textarea id="docSymptoms" class="form-control mb-3" rows="4"
+              placeholder="Ghi nhận triệu chứng do lễ tân chuyển đến..."></textarea>
+            <label class="form-label fw-semibold">Tiền sử bệnh</label>
+            <input id="docMedicalHistory" class="form-control mb-3"
+              placeholder="Dị ứng, bệnh nền, thuốc đang dùng..." />
+            <div class="row g-2">
+              <div class="col-4">
+                <label class="form-label fw-semibold">Mã ICD-10</label>
+                <div class="position-relative">
+                  <input id="docIcdCode" class="form-control" placeholder="Ví dụ: K29.5" autocomplete="off"
+                    oninput="lookupIcdDiagnosis(this.value)" />
+                  <div id="icdSuggestions" class="list-group position-absolute w-100 shadow-sm d-none"
+                    style="z-index: 10"></div>
+                </div>
+                <div id="icdSuggestion" class="form-text text-primary"></div>
+              </div>
+              <div class="col-8">
+                <label class="form-label fw-semibold">Bệnh chính</label>
+                <input id="docDiagnosis" class="form-control" readonly />
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-6" id="orders">
+            <label class="form-label fw-semibold">Chỉ định cận lâm sàng</label>
+            <textarea id="docClinicalNote" class="form-control mb-3" rows="2"
+              placeholder="Xét nghiệm, chẩn đoán hình ảnh..."></textarea>
+            <label class="form-label fw-semibold">Đơn thuốc</label>
+            <div class="position-relative">
+              <input id="docMedicineSearch" class="form-control" autocomplete="off"
+                placeholder="Nhập tên thuốc hoặc hoạt chất..." oninput="suggestMedicines(this.value)"
+                onkeydown="handleSuggestionKeydown(event, 'medicine')" />
+              <div id="medicineSuggestions" class="list-group position-absolute w-100 shadow-sm d-none"
+                style="z-index: 10"></div>
+            </div>
+            <div class="medication-grid-scroll mt-2">
+              <div class="medication-grid-header" aria-hidden="true">
+                <span>Tên thuốc</span><span>Đường dùng</span><span>Số
+                  ngày</span><span>Sáng</span><span>Trưa</span><span>Chiều</span><span>Tối</span><span>SL</span><span>Cách
+                  dùng</span><span></span>
+              </div>
+              <div id="selectedMedicineList"></div>
+            </div>
+            <label class="form-label fw-semibold mt-3">Vật tư sử dụng</label>
+            <div class="position-relative">
+              <input id="docSupplySearch" class="form-control" autocomplete="off"
+                placeholder="Nhập tên hoặc mã vật tư..." oninput="suggestSupplies(this.value)"
+                onkeydown="handleSuggestionKeydown(event, 'supply')" />
+              <div id="supplySuggestions" class="list-group position-absolute w-100 shadow-sm d-none"
+                style="z-index: 10"></div>
+            </div>
+            <div class="medication-grid-scroll mt-2">
+              <div class="medication-grid-header" aria-hidden="true">
+                <span>Tên vật tư</span><span>Cách sử dụng</span><span>Số
+                  ngày</span><span>Sáng</span><span>Trưa</span><span>Chiều</span><span>Tối</span><span>SL</span><span>Cách
+                  dùng</span><span></span>
+              </div>
+              <div id="selectedSupplyList"></div>
+            </div>
+            <label class="form-label fw-semibold mt-3">Dặn dò</label>
+            <textarea id="docAdvice" class="form-control" rows="2"></textarea>
           </div>
         </div>
       </div>
-      <section id="patient-list" class="card mb-3">
-        <div class="card-header d-flex justify-content-between align-items-center">
-          <span>
-            <i class="fa-solid fa-list-check text-primary me-2"></i>
-            Hàng chờ khám
-          </span>
-          <span class="badge bg-primary">Ưu tiên bệnh nhân đã tiếp nhận</span>
-        </div>
-        <div class="card-body">
-          <div class="row g-2 mb-3">
-            <div class="col-md-3">
-              <label class="form-label small mb-1">Từ ngày</label>
-              <input id="examFrom" class="form-control form-control-sm" type="date" />
-            </div>
-            <div class="col-md-3">
-              <label class="form-label small mb-1">Đến ngày</label>
-              <input id="examTo" class="form-control form-control-sm" type="date" />
-            </div>
-            <div class="col-md-3">
-              <label class="form-label small mb-1">Mã bệnh nhân</label>
-              <input id="examSearch" class="form-control form-control-sm" placeholder="Nhập mã BN..." type="search" />
-            </div>
-            <div class="col-md-3">
-              <label class="form-label small mb-1">Trạng thái</label>
-              <select id="examStatusFilter" class="form-select form-select-sm">
-                <option value="ALL">Chờ + Đang khám</option>
-                <option value="WAITING">Chờ khám</option>
-                <option value="EXAMINING">Đang khám</option>
-              </select>
-            </div>
-          </div>
-          <div id="examQueueMessage" class="small text-muted mb-2" role="status"></div>
-          <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-              <thead class="table-light">
-                <tr>
-                  <th>STT</th>
-                  <th>Mã BN</th>
-                  <th>Họ tên</th>
-                  <th>Phòng</th>
-                  <th>Trạng thái</th>
-                  <th class="text-end">Thao tác</th>
-                </tr>
-              </thead>
-              <tbody id="examinationQueueBody">
-                <tr><td colspan="6" class="text-center text-muted py-4">Đang tải hàng chờ...</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-      <section id="clinical" class="card mb-3">
-        <div class="card-header d-flex justify-content-between align-items-center">
-          <span>
-            <i class="fa-solid fa-stethoscope text-primary me-2"></i>
-            Hồ sơ khám bệnh
-          </span>
-          <span class="badge bg-light text-dark border">
-            Mã BN:
-            <input id="examPatientCode" class="border-0 bg-transparent fw-bold" value="" readonly style="width: 92px" />
-          </span>
-        </div>
-        <div class="card-body">
-          <div class="row g-3 mb-3">
-            <div class="col-md-4">
-              <div class="text-muted small">Bệnh nhân</div>
-              <div class="fs-5 fw-bold text-primary" id="docPatientName">Chưa chọn bệnh nhân</div>
-              <div class="small text-secondary" id="docPatientMeta">Chọn bệnh nhân trong hàng chờ để bắt đầu</div>
-            </div>
-            <div class="col-md-2">
-              <label class="form-label small">Huyết áp</label>
-              <input class="form-control" id="docBloodPressure" inputmode="decimal" placeholder="120/80" />
-            </div>
-            <div class="col-md-2">
-              <label class="form-label small">Mạch</label>
-              <input class="form-control" id="docPulse" type="number" min="0" max="300" step="1" inputmode="numeric" placeholder="lần/phút" />
-            </div>
-            <div class="col-md-2">
-              <label class="form-label small">Nhiệt độ</label>
-              <input class="form-control" id="docTemperature" type="number" min="25" max="45" step="0.1" inputmode="decimal" placeholder="°C" />
-            </div>
-            <div class="col-md-2">
-              <label class="form-label small">Cân nặng</label>
-              <input class="form-control" id="docWeight" type="number" min="0.1" max="500" step="0.1" inputmode="decimal" placeholder="kg" />
-            </div>
-          </div>
-          <div class="row g-3">
-            <div class="col-lg-6">
-              <label class="form-label fw-semibold">Triệu chứng / lý do khám</label>
-              <textarea id="docSymptoms" class="form-control mb-3" rows="4" placeholder="Ghi nhận triệu chứng do lễ tân chuyển đến..."></textarea>
-              <label class="form-label fw-semibold">Tiền sử bệnh</label>
-              <input id="docMedicalHistory" class="form-control mb-3" placeholder="Dị ứng, bệnh nền, thuốc đang dùng..." />
-              <div class="row g-2">
-                <div class="col-4">
-                  <label class="form-label fw-semibold">Mã ICD-10</label>
-                  <div class="position-relative">
-                    <input id="docIcdCode" class="form-control" placeholder="Ví dụ: K29.5" autocomplete="off" oninput="lookupIcdDiagnosis(this.value)" />
-                    <div id="icdSuggestions" class="list-group position-absolute w-100 shadow-sm d-none" style="z-index: 10"></div>
-                  </div>
-                  <div id="icdSuggestion" class="form-text text-primary"></div>
-                </div>
-                <div class="col-8">
-                  <label class="form-label fw-semibold">Bệnh chính</label>
-                  <input id="docDiagnosis" class="form-control" readonly />
-                </div>
-              </div>
-            </div>
-            <div class="col-lg-6" id="orders">
-              <label class="form-label fw-semibold">Chỉ định cận lâm sàng</label>
-              <textarea id="docClinicalNote" class="form-control mb-3" rows="2" placeholder="Xét nghiệm, chẩn đoán hình ảnh..."></textarea>
-              <label class="form-label fw-semibold">Đơn thuốc</label>
-              <div class="position-relative">
-                <input id="docMedicineSearch" class="form-control" autocomplete="off" placeholder="Nhập tên thuốc hoặc hoạt chất..." oninput="suggestMedicines(this.value)" />
-                <div id="medicineSuggestions" class="list-group position-absolute w-100 shadow-sm d-none" style="z-index: 10"></div>
-              </div>
-              <div id="selectedMedicineList" class="mt-2"></div>
-              <label class="form-label fw-semibold mt-3">Dặn dò</label>
-              <textarea id="docAdvice" class="form-control" rows="2"></textarea>
-            </div>
-          </div>
-        </div>
-        <div class="card-footer d-flex justify-content-end gap-2">
-          <a class="btn btn-outline-secondary" href="#patient-list">Đổi bệnh nhân</a>
-          <button id="finishExaminationButton" class="btn btn-success" type="button" onclick="finishExamination()" disabled>
-            <i class="fa-solid fa-check me-1"></i>
-            Hoàn tất khám & chuyển viện phí
-          </button>
-        </div>
-      </section>
-    </main>
-    <div class="position-fixed bottom-0 end-0 p-3 toast-container">
-      <div id="liveToast" class="toast align-items-center text-white bg-success border-0">
-        <div class="d-flex">
-          <div class="toast-body" id="toastMessage"></div>
-          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-        </div>
+      <div class="card-footer d-flex justify-content-end gap-2">
+        <a class="btn btn-outline-secondary" href="#patient-list">Đổi bệnh nhân</a>
+        <button id="finishExaminationButton" class="btn btn-success" type="button" onclick="finishExamination()"
+          disabled>
+          <i class="fa-solid fa-check me-1"></i>
+          Hoàn tất khám & chuyển viện phí
+        </button>
+      </div>
+    </section>
+  </main>
+  <div class="position-fixed bottom-0 end-0 p-3 toast-container">
+    <div id="liveToast" class="toast align-items-center text-white bg-success border-0">
+      <div class="d-flex">
+        <div class="toast-body" id="toastMessage"></div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
       </div>
     </div>
-    <script>
-      document.addEventListener('DOMContentLoaded', () => {
-        loadCurrentUser();
-        loadExaminationQueue();
-      });
-    </script>
-    <footer th:replace="~{fragments/footer :: footer}"></footer>
-    <th:block th:replace="~{fragments/footer :: scripts}"></th:block>
-    <script src="/resources/js/examination-data.js"></script>
-  </body>
+  </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      loadCurrentUser();
+      loadExaminationQueue();
+    });
+  </script>
+  <th:block th:replace="~{fragments/footer :: scripts}"></th:block>
+  <script src="/resources/js/examination-data.js"></script>
+</body>
+
 </html>

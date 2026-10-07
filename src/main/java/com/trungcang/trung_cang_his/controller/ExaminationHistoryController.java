@@ -1,6 +1,7 @@
 package com.trungcang.trung_cang_his.controller;
 
 import com.trungcang.trung_cang_his.service.ExaminationHistoryService;
+import com.trungcang.trung_cang_his.domain.Examination;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
@@ -22,9 +23,23 @@ public class ExaminationHistoryController {
     @GetMapping("/api/examination-history/{id}")
     public ExaminationHistoryService.HistoryDetail detail(@PathVariable Long id) { return history.detail(id); }
 
+    @PostMapping("/api/examination-history/{id}/paper-status")
+    public ExaminationHistoryService.HistoryDetail paperStatus(@PathVariable Long id,
+            @RequestParam Examination.PaperRecordStatus status, Authentication authentication) {
+        return history.updatePaperRecordStatus(id, status, authentication.getName());
+    }
+
     @PostMapping("/api/examinations/complete")
     public ExaminationHistoryService.HistoryDetail complete(@Valid @RequestBody ExaminationHistoryService.CompleteRequest request,
                                                              Authentication authentication) {
         return history.complete(request, authentication.getName());
     }
+
+    @PostMapping("/api/examination-history/{id}/reopen")
+    public ExaminationHistoryService.HistoryDetail reopen(@PathVariable Long id, Authentication authentication) {
+        return history.reopen(id, authentication.getName());
+    }
+
+    @GetMapping("/api/examination-history/{id}/reopen-eligibility")
+    public boolean canReopen(@PathVariable Long id) { return history.canReopen(id); }
 }

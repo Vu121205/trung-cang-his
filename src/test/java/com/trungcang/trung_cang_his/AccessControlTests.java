@@ -61,7 +61,8 @@ class AccessControlTests {
                     .andExpect(status().is(route.getValue() ? 200 : 403)).andReturn();
             if (route.getValue()) {
                 String html = result.getResponse().getContentAsString(java.nio.charset.StandardCharsets.UTF_8);
-                assertThat(html).contains("navbar-nav", "<footer", "/resources/js/main.js");
+                assertThat(html).contains("navbar-nav", "/resources/js/main.js");
+                assertThat(html).doesNotContain("<footer");
                 assertThat(html).doesNotContain("th:replace", "th:if");
                 String menu = html.substring(html.indexOf("<ul"), html.indexOf("</ul>"));
                 for (var link : allowed.entrySet()) {

@@ -1,0 +1,38 @@
+@startuml
+title Use Case nghiệp vụ khám ngoại trú
+left to right direction
+skinparam packageStyle rectangle
+actor "Lễ tân" as Reception
+actor "Bác sĩ" as Doctor
+actor "Dược sĩ" as Pharmacist
+rectangle "TrungCang HIS" {
+  usecase "Đăng nhập\nđăng xuất" as Login
+  package "Tiếp nhận" {
+    usecase "Quản lý hồ sơ\nbệnh nhân" as Patient
+    usecase "Tiếp nhận, chọn phòng\nvà theo dõi hàng chờ" as Admit
+  }
+  package "Khám bệnh" {
+    usecase "Khám, nhập sinh hiệu\nvà chẩn đoán ICD" as Examine
+    usecase "Kê thuốc và\nchỉ định vật tư" as Prescribe
+    usecase "Tra cứu lịch sử\nkhám bệnh" as History
+  }
+  package "Hoàn tất điều trị" {
+    usecase "Xác nhận\nthanh toán" as Pay
+    usecase "Xác nhận cấp phát\nvà trừ tồn lô" as Dispense
+  }
+}
+Reception --> Login
+Reception --> Patient
+Reception --> Admit
+Reception --> History
+Doctor --> Login
+Doctor --> Examine
+Doctor --> Prescribe
+Doctor --> History
+Pharmacist --> Login
+Pharmacist --> Pay
+Pharmacist --> Dispense
+Pharmacist --> History
+Examine .> Prescribe : <<extend>>
+Pay .> Dispense : <<include>> when prescription exists
+@enduml

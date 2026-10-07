@@ -22,10 +22,12 @@ public class WorkflowService {
     private final PrescriptionDetailRepository prescriptionDetails;
     private final InvoiceRepository invoices;
     private final InvoiceDetailRepository invoiceDetails;
+    private final ExaminationRepository examinations;
         private final MedicalServiceRepository medicalServices;
         private final MedicineRepository medicines;
     private final MedicineBatchRepository batches;
     private final UserRepository users;
+    private final AuditService auditService;
 
     @Transactional(readOnly = true)
     public List<BillingItem> pendingPayments() {
@@ -37,7 +39,7 @@ public class WorkflowService {
 
     @Transactional
         public PaymentReceipt pay(Long visitId, PaymentRequest request, String username) {
-        Visit visit = visits.findById(visitId).orElseThrow(() -> missing("Không tìm thấy lượt khám."));
+        Visit visit = visits.findByIdForUpdate(visitId).orElseThrow(() -> missing("Không tìm thấy lượt khám."));
         if (visit.getStatus() != Visit.Status.WAITING_PAYMENT) throw conflict("Lượt khám không còn chờ thanh toán.");
         if (invoices.findFirstByVisit_IdOrderByIdDesc(visitId).filter(i -> i.getStatus() == Invoice.Status.PAID).isPresent()) {
             throw conflict("Lượt khám đã được thanh toán.");
@@ -72,6 +74,8 @@ public class WorkflowService {
                         detail.setTotalPrice(line.totalPrice());
             invoiceDetails.save(detail);
         }
+        auditService.record("INVOICE_PAID", "Visit", visitId, username,
+                "Thanh toán hoàn tất; hóa đơn được lập trong hệ thống.");
         return new PaymentReceipt(invoice.getId(), invoice.getInvoiceCode(), total, invoice.getPaymentMethod(), invoice.getStatus());
     }
 
@@ -84,7 +88,7 @@ public class WorkflowService {
     }
 
     @Transactional
-        public DispenseResult dispense(Long prescriptionId) {
+    public DispenseResult dispense(Long prescriptionId, String username) {
         Prescription prescription = prescriptions.findById(prescriptionId)
                 .orElseThrow(() -> missing("Không tìm thấy đơn thuốc."));
         if (prescription.getStatus() != Prescription.Status.PRESCRIBED) throw conflict("Đơn thuốc không còn chờ cấp phát.");
@@ -106,10 +110,13 @@ public class WorkflowService {
                 remaining -= used;
                 if (remaining == 0) break;
             }
+            batches.saveAll(available);
         }
         prescription.setStatus(Prescription.Status.DISPENSED);
         prescription.getVisit().setStatus(Visit.Status.COMPLETED);
         prescription.getVisit().setUpdatedAt(LocalDateTime.now());
+        auditService.record("MEDICINE_DISPENSED", "Prescription", prescriptionId, username,
+                "Cấp phát hoàn tất và trừ tồn theo lô.");
         return new DispenseResult(prescription.getId(), prescription.getPrescriptionCode(), prescription.getStatus(),
                 prescription.getVisit().getStatus());
     }
@@ -117,8 +124,11 @@ public class WorkflowService {
     private BillingItem billingItem(Visit visit) {
         List<BillingLine> items = billingLines(visit);
         BigDecimal total = items.stream().map(BillingLine::totalPrice).reduce(BigDecimal.ZERO, BigDecimal::add);
-        return new BillingItem(visit.getId(), visit.getVisitCode(), visit.getPatient().getPatientCode(),
-                visit.getPatient().getFullName(), visit.getVisitDate(), items, total);
+        Patient patient = visit.getPatient();
+        return new BillingItem(visit.getId(), visit.getVisitCode(), patient.getPatientCode(),
+                patient.getFullName(), patient.getDateOfBirth(), patient.getGender() == null ? "" : patient.getGender().name(),
+                patient.getAddress(), visit.getRoom().getName(), examinations.findByVisit_VisitCode(visit.getVisitCode())
+                        .map(Examination::getExaminationResult).orElse(""), visit.getVisitDate(), items, total);
     }
 
         private List<BillingLine> billingLines(Visit visit) {
@@ -127,11 +137,12 @@ public class WorkflowService {
                 if (roomCode != null && roomCode.startsWith("PK-")) {
                         String serviceCode = roomCode.replaceFirst("^PK-", "KB-").replaceFirst("-\\d+$", "");
                         medicalServices.findByCodeAndStatus(serviceCode, MedicalService.Status.ACTIVE).ifPresent(service ->
-                                        items.add(new BillingLine("EXAMINATION", service.getId(), null, service.getName(), 1, service.getUnit(),
+                                        items.add(new BillingLine("EXAMINATION", "1. Khám bệnh", service.getId(), null, service.getName(), 1, service.getUnit(),
                                                         service.getPrice(), service.getPrice())));
                 }
                 for (PrescriptionDetail detail : prescriptionDetails.findAllByPrescription_Visit_Id(visit.getId())) {
-                        items.add(new BillingLine("MEDICINE", null, detail.getMedicine().getId(), detail.getMedicine().getName(),
+                        boolean supply = detail.getMedicine().getInventoryType() == Medicine.InventoryType.SUPPLY;
+                        items.add(new BillingLine(supply ? "OTHER" : "MEDICINE", supply ? "9. Thiết bị y tế" : "8. Thuốc, dịch truyền", null, detail.getMedicine().getId(), detail.getMedicine().getName(),
                                         detail.getQuantity(), detail.getUnit(), detail.getUnitPrice(), detail.getTotalPrice()));
                 }
                 return items;
@@ -151,10 +162,11 @@ public class WorkflowService {
     private ResponseStatusException missing(String message) { return new ResponseStatusException(HttpStatus.NOT_FOUND, message); }
     private ResponseStatusException conflict(String message) { return new ResponseStatusException(HttpStatus.CONFLICT, message); }
 
-        public record BillingLine(String itemType, Long serviceId, Long medicineId, String description, Integer quantity,
+        public record BillingLine(String itemType, String statementCategory, Long serviceId, Long medicineId, String description, Integer quantity,
                                                           String unit, BigDecimal unitPrice, BigDecimal totalPrice) {}
-    public record BillingItem(Long visitId, String visitCode, String patientCode, String patientName, LocalDate visitDate,
-                              List<BillingLine> lines, BigDecimal totalAmount) {}
+    public record BillingItem(Long visitId, String visitCode, String patientCode, String patientName,
+                              java.time.LocalDate dateOfBirth, String gender, String address, String roomName, String diagnosis,
+                              LocalDate visitDate, List<BillingLine> lines, BigDecimal totalAmount) {}
         public record PaymentRequest(@NotNull Invoice.PaymentMethod method) {}
         public record PaymentReceipt(Long invoiceId, String invoiceCode, BigDecimal totalAmount,
                                                                  Invoice.PaymentMethod method, Invoice.Status status) {}

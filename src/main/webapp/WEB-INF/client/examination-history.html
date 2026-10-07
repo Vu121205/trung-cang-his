@@ -27,11 +27,10 @@
         <div class="card-footer d-flex justify-content-between align-items-center"><button id="historyPrevious" class="btn btn-outline-secondary btn-sm" disabled>Trang trước</button><span id="historyPage" aria-live="polite"></span><button id="historyNext" class="btn btn-outline-secondary btn-sm" disabled>Trang sau</button></div>
       </section>
       <section id="historyDetail" class="card mt-3 d-none" tabindex="-1" aria-label="Chi tiết hồ sơ khám">
-        <div class="card-header d-flex justify-content-between align-items-center"><span id="historyDetailTitle">Chi tiết hồ sơ</span><button id="historyClose" class="btn btn-outline-secondary btn-sm">Đóng</button></div>
+        <div class="card-header d-flex justify-content-between align-items-center"><span id="historyDetailTitle">Chi tiết hồ sơ</span><div class="d-flex gap-2"><button id="historyPrintPrescription" class="btn btn-outline-primary btn-sm d-none" type="button"><i class="fa-solid fa-print me-1"></i>In đơn/bảng kê thuốc</button><button id="historyClose" class="btn btn-outline-secondary btn-sm">Đóng</button></div></div>
         <div id="historyDetailBody" class="card-body"></div>
       </section>
     </main>
-    <footer th:replace="~{fragments/footer :: footer}"></footer>
     <th:block th:replace="~{fragments/footer :: scripts}"></th:block>
     <script src="/resources/js/examination-history.js"></script>
   </body>

@@ -15,6 +15,8 @@ public class ClientPageController {
         model.addAttribute("canReceive", admin || hasRole(authentication, "RECEPTION"));
         model.addAttribute("canExamine", admin || hasRole(authentication, "DOCTOR"));
         model.addAttribute("canDispense", admin || hasRole(authentication, "PHARMACIST"));
+        model.addAttribute("canManageInventory", admin || hasRole(authentication, "PHARMACIST"));
+        model.addAttribute("canViewReports", admin || hasRole(authentication, "RECEPTION") || hasRole(authentication, "PHARMACIST"));
     }
 
     private boolean hasRole(Authentication authentication, String role) {
@@ -65,5 +67,15 @@ public class ClientPageController {
     @GetMapping("/examination-history")
     public String historyPage() {
         return "client/examination-history";
+    }
+
+    @GetMapping("/inventory")
+    public String inventoryPage() {
+        return "client/inventory";
+    }
+
+    @GetMapping("/reports")
+    public String reportsPage() {
+        return "client/reports";
     }
 }

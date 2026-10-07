@@ -1,0 +1,30 @@
+@startuml
+title Quy trình thanh toán và cấp phát
+start
+partition "Thu ngân/Dược sĩ" {
+  :Chọn lượt khám ở trạng thái WAITING_PAYMENT;
+  :Xác nhận thanh toán;
+}
+partition "Hệ thống" {
+  :Tạo hóa đơn và chi tiết hóa đơn;
+  if (Có thuốc hoặc vật tư trong đơn?) then (Có)
+    :Chuyển Visit sang WAITING_PHARMACY;
+  else (Không)
+    :Chuyển Visit sang COMPLETED;
+    stop
+  endif
+}
+partition "Dược sĩ" {
+  :Kiểm tra thuốc/vật tư và xác nhận cấp phát;
+}
+partition "Hệ thống" {
+  if (Đủ tồn khả dụng theo lô?) then (Đủ)
+    :Trừ quantity của medicine_batches;
+    :Chuyển Visit sang COMPLETED;
+  else (Không đủ)
+    :Thông báo không đủ tồn;
+    :Giữ trạng thái WAITING_PHARMACY;
+  endif
+}
+stop
+@enduml

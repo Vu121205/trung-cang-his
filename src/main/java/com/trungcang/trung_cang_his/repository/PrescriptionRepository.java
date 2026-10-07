@@ -8,4 +8,5 @@ import org.springframework.stereotype.Repository;
 public interface PrescriptionRepository extends JpaRepository<Prescription, Long> {
 	java.util.List<Prescription> findAllByStatusOrderByPrescriptionDateAsc(Prescription.Status status);
 	java.util.List<Prescription> findAllByVisit_Id(Long visitId);
+	java.util.Optional<Prescription> findByExamination_Id(Long examinationId);
 }

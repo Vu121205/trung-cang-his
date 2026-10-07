@@ -6,6 +6,10 @@ import com.trungcang.trung_cang_his.domain.User;
 import com.trungcang.trung_cang_his.repository.PatientRepository;
 import com.trungcang.trung_cang_his.repository.RoleRepository;
 import com.trungcang.trung_cang_his.repository.UserRepository;
+import com.trungcang.trung_cang_his.repository.MedicineRepository;
+import com.trungcang.trung_cang_his.repository.MedicineBatchRepository;
+import com.trungcang.trung_cang_his.domain.Medicine;
+import com.trungcang.trung_cang_his.domain.MedicineBatch;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,6 +20,7 @@ import java.time.LocalDateTime;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.math.BigDecimal;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -27,6 +32,8 @@ public class DatabaseSeeder {
     CommandLineRunner seedUsers(RoleRepository roleRepository,
                                 UserRepository userRepository,
                                 PatientRepository patientRepository,
+                                MedicineRepository medicineRepository,
+                                MedicineBatchRepository batchRepository,
                                 PasswordEncoder passwordEncoder,
                                 PlatformTransactionManager transactionManager) {
         return args -> {
@@ -76,8 +83,60 @@ public class DatabaseSeeder {
                 }
 
             });
+            seedMedicines(medicineRepository, batchRepository);
             seedDemoPatients(patientRepository);
         };
+    }
+
+    private void seedMedicines(MedicineRepository medicines, MedicineBatchRepository batches) {
+        record MedicineSeed(String code, String name, String ingredient, String strength, String form,
+                            String unit, BigDecimal price, int minStock, int quantity, Medicine.InventoryType inventoryType) {}
+        List<MedicineSeed> catalog = List.of(
+                new MedicineSeed("TD001", "Paracetamol 500 mg", "Paracetamol", "500 mg", "Viên nén", "Viên", new BigDecimal("1500"), 100, 1000, Medicine.InventoryType.MEDICINE),
+                new MedicineSeed("TD004", "Ibuprofen 200 mg", "Ibuprofen", "200 mg", "Viên nén", "Viên", new BigDecimal("2000"), 100, 1000, Medicine.InventoryType.MEDICINE),
+                new MedicineSeed("TD009", "Loratadine 10 mg", "Loratadine", "10 mg", "Viên nén", "Viên", new BigDecimal("1200"), 100, 1000, Medicine.InventoryType.MEDICINE),
+                new MedicineSeed("TD017", "Amoxicillin 500 mg", "Amoxicillin", "500 mg", "Viên nang", "Viên", new BigDecimal("2500"), 100, 1000, Medicine.InventoryType.MEDICINE),
+                new MedicineSeed("TD023", "Cefalexin 500 mg", "Cefalexin", "500 mg", "Viên nang", "Viên", new BigDecimal("3000"), 100, 1000, Medicine.InventoryType.MEDICINE),
+                new MedicineSeed("TD029", "Azithromycin 500 mg", "Azithromycin", "500 mg", "Viên nén", "Viên", new BigDecimal("4500"), 50, 500, Medicine.InventoryType.MEDICINE),
+                new MedicineSeed("TD040", "Omeprazole 20 mg", "Omeprazole", "20 mg", "Viên nang", "Viên", new BigDecimal("1800"), 100, 1000, Medicine.InventoryType.MEDICINE),
+                new MedicineSeed("TD050", "Metformin 500 mg", "Metformin", "500 mg", "Viên nén", "Viên", new BigDecimal("1000"), 100, 1000, Medicine.InventoryType.MEDICINE),
+                new MedicineSeed("VT001", "Găng tay y tế không bột", "", "M", "Vật tư tiêu hao", "Đôi", new BigDecimal("1800"), 200, 2000, Medicine.InventoryType.SUPPLY),
+                new MedicineSeed("VT002", "Bơm kim tiêm 5 mL", "", "5 mL", "Vật tư tiêu hao", "Cái", new BigDecimal("2500"), 100, 1000, Medicine.InventoryType.SUPPLY),
+                new MedicineSeed("VT003", "Gạc vô khuẩn", "", "10 cm x 10 cm", "Vật tư tiêu hao", "Miếng", new BigDecimal("1200"), 200, 2000, Medicine.InventoryType.SUPPLY),
+                new MedicineSeed("VT004", "Dây truyền dịch", "", "Tiêu chuẩn", "Vật tư tiêu hao", "Bộ", new BigDecimal("9000"), 50, 500, Medicine.InventoryType.SUPPLY),
+                new MedicineSeed("VT005", "Khẩu trang y tế", "", "3 lớp", "Vật tư bảo hộ", "Cái", new BigDecimal("800"), 200, 3000, Medicine.InventoryType.SUPPLY)
+        );
+        LocalDateTime now = LocalDateTime.now();
+        for (MedicineSeed seed : catalog) {
+            Medicine medicine = medicines.findByCode(seed.code()).orElseGet(Medicine::new);
+            if (medicine.getId() == null) {
+                medicine.setCode(seed.code());
+                medicine.setName(seed.name());
+                medicine.setActiveIngredient(seed.ingredient());
+                medicine.setStrength(seed.strength());
+                medicine.setDosageForm(seed.form());
+                medicine.setUnit(seed.unit());
+                medicine.setPrice(seed.price());
+                medicine.setMinStock(seed.minStock());
+                medicine.setInventoryType(seed.inventoryType());
+                medicine.setStatus(Medicine.Status.ACTIVE);
+                medicine.setCreatedAt(now);
+                medicine = medicines.save(medicine);
+            } else if (medicine.getInventoryType() == null) {
+                medicine.setInventoryType(seed.inventoryType());
+                medicine = medicines.save(medicine);
+            }
+            if (batches.findByMedicine_IdAndBatchNumber(medicine.getId(), "KHO-MAC-DINH-2026").isEmpty()) {
+                MedicineBatch batch = new MedicineBatch();
+                batch.setMedicine(medicine);
+                batch.setBatchNumber("KHO-MAC-DINH-2026");
+                batch.setQuantity(seed.quantity());
+                batch.setUnitPrice(seed.price());
+                batch.setExpiryDate(LocalDate.now().plusYears(2));
+                batch.setCreatedAt(now);
+                batches.save(batch);
+            }
+        }
     }
 
     private void seedDemoPatients(PatientRepository patientRepository) {

@@ -3,6 +3,7 @@ let patientRecords = {};
 
 let icdCatalog = {};
 let medicineCatalog = [];
+let supplyCatalog = [];
 
 const FLOW_STORAGE_KEY = 'hisPatientFlow';
 const CLINIC_TIME_ZONE = 'Asia/Ho_Chi_Minh';
@@ -124,6 +125,7 @@ function suggestMedicines(value) {
   const container = document.getElementById('medicineSuggestions');
   const keyword = value.trim().toLowerCase();
   container.replaceChildren();
+  container.dataset.activeIndex = '-1';
   container.classList.toggle('d-none', !keyword);
   if (!keyword) return;
   const matches = medicineCatalog.filter((medicine) => keyword.split(/\s+/).every((term) => `${medicine.name} ${medicine.active} ${medicine.hint}`.toLowerCase().includes(term))).slice(0, 20);
@@ -132,10 +134,84 @@ function suggestMedicines(value) {
     button.type = 'button';
     button.className = 'list-group-item list-group-item-action py-2';
     button.textContent = `${medicine.name} · ${medicine.active} · ${medicine.hint}`;
+    button.dataset.itemId = medicine.id;
     button.addEventListener('click', () => selectMedicine(medicine.id));
     container.appendChild(button);
   }
   if (!matches.length) container.textContent = 'Không tìm thấy thuốc phù hợp.';
+}
+
+function handleSuggestionKeydown(event, type) {
+  const searchId = type === 'medicine' ? 'docMedicineSearch' : 'docSupplySearch';
+  const suggestionId = type === 'medicine' ? 'medicineSuggestions' : 'supplySuggestions';
+  const container = document.getElementById(suggestionId);
+  const buttons = [...container.querySelectorAll('button[data-item-id]')];
+  if (event.key === 'Escape') {
+    container.classList.add('d-none');
+    return;
+  }
+  if (!buttons.length || container.classList.contains('d-none')) return;
+  let index = Number(container.dataset.activeIndex || -1);
+  if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+    event.preventDefault();
+    index = (index + (event.key === 'ArrowDown' ? 1 : -1) + buttons.length) % buttons.length;
+    buttons.forEach((button, buttonIndex) => {
+      const active = buttonIndex === index;
+      button.classList.toggle('active', active);
+      button.setAttribute('aria-selected', String(active));
+    });
+    container.dataset.activeIndex = String(index);
+    buttons[index].scrollIntoView({ block: 'nearest' });
+    return;
+  }
+  if (event.key !== 'Enter') return;
+  event.preventDefault();
+  const selected = buttons[index >= 0 ? index : 0];
+  const id = Number(selected.dataset.itemId);
+  const listId = type === 'medicine' ? 'selectedMedicineList' : 'selectedSupplyList';
+  const list = document.getElementById(listId);
+  const previousCount = list.children.length;
+  if (type === 'medicine') selectMedicine(id);
+  else selectSupply(id);
+  const row = list.children.length > previousCount ? list.lastElementChild : null;
+  if (row) focusScheduleField(row, 0);
+  else document.getElementById(searchId).focus();
+}
+
+function focusScheduleField(row, index) {
+  const fields = [...row.querySelectorAll('select, input[type="number"]')];
+  if (fields[index]) fields[index].focus();
+}
+
+function handleScheduleEnter(event, row, searchId) {
+  if (event.key !== 'Enter') return;
+  event.preventDefault();
+  const fields = [...row.querySelectorAll('select, input[type="number"]')];
+  const currentIndex = fields.indexOf(event.currentTarget);
+  if (currentIndex >= 0 && currentIndex < fields.length - 1) focusScheduleField(row, currentIndex + 1);
+  else document.getElementById(searchId).focus();
+}
+
+function createScheduleInput(type, ariaLabel, options = null, value = null) {
+  const input = document.createElement(type === 'select' ? 'select' : 'input');
+  input.className = type === 'select' ? 'form-select form-select-sm' : 'form-control form-control-sm text-center';
+  input.setAttribute('aria-label', ariaLabel);
+  if (type === 'select') options.forEach((option) => input.add(new Option(option, option)));
+  else { input.type = type; input.min = '0'; input.max = '10000'; input.step = '1'; input.value = value; }
+  return input;
+}
+
+function updateScheduleRow(row) {
+  const days = Number(row.children[2].value) || 0;
+  const doses = [...row.querySelectorAll('input[type="number"]')].slice(1).map((input) => Number(input.value) || 0);
+  const quantity = days * doses.reduce((sum, dose) => sum + dose, 0);
+  row.querySelector('[data-quantity]').value = String(quantity);
+  row.querySelector('[data-quantity]').textContent = quantity;
+  const periods = ['sáng', 'trưa', 'chiều', 'tối'].filter((period, index) => doses[index] > 0).map((period, index) => `${doses[index]} đơn vị buổi ${period}`);
+  const route = row.children[1].value.toLowerCase();
+  row.querySelector('[data-instruction]').value = periods.length && days > 0
+    ? `${route.charAt(0).toUpperCase()}${route.slice(1)} ${periods.join(', ')} trong ${days} ngày.`
+    : '';
 }
 
 function selectMedicine(id) {
@@ -144,35 +220,99 @@ function selectMedicine(id) {
   const container = document.getElementById('selectedMedicineList');
   if ([...container.children].some((row) => Number(row.dataset.medicineId) === id)) return;
   const row = document.createElement('div');
-  row.className = 'input-group input-group-sm mb-2';
+  row.className = 'medication-grid-row mb-2';
   row.dataset.medicineId = id;
   const label = document.createElement('span');
-  label.className = 'input-group-text flex-grow-1';
+  label.className = 'medication-name';
   label.textContent = `${medicine.name} (${medicine.unit})`;
-  const quantity = document.createElement('input');
-  quantity.type = 'number';
-  quantity.min = '1';
-  quantity.max = '10000';
-  quantity.value = '1';
+  const route = createScheduleInput('select', 'Đường dùng ' + medicine.name, ['Uống', 'Ngậm', 'Bôi', 'Nhỏ', 'Tiêm']);
+  const days = createScheduleInput('number', 'Số ngày dùng ' + medicine.name, null, 1);
+  const doses = ['Sáng', 'Trưa', 'Chiều', 'Tối'].map((label) => createScheduleInput('number', `${label} ${medicine.name}`, null, 0));
+  const quantity = document.createElement('output');
   quantity.dataset.quantity = '';
-  quantity.className = 'form-control';
-  quantity.style.maxWidth = '90px';
-  quantity.setAttribute('aria-label', 'Số lượng ' + medicine.name);
+  quantity.className = 'medication-total text-center';
+  quantity.setAttribute('aria-label', 'Tổng số lượng ' + medicine.name);
   const instruction = document.createElement('input');
   instruction.dataset.instruction = '';
-  instruction.className = 'form-control';
-  instruction.placeholder = 'Cách dùng';
+  instruction.className = 'form-control form-control-sm medication-instruction';
+  instruction.readOnly = true;
+  instruction.placeholder = 'Tự động theo buổi';
   instruction.maxLength = 2000;
   instruction.setAttribute('aria-label', 'Cách dùng ' + medicine.name);
   const remove = document.createElement('button');
   remove.type = 'button';
-  remove.className = 'btn btn-outline-danger';
-  remove.textContent = 'Xóa';
+  remove.className = 'btn btn-outline-danger btn-sm';
+  remove.setAttribute('aria-label', 'Xóa ' + medicine.name);
+  remove.innerHTML = '<i class="fa-solid fa-trash"></i>';
   remove.addEventListener('click', () => row.remove());
-  row.append(label, quantity, instruction, remove);
+  row.append(label, route, days, ...doses, quantity, instruction, remove);
+  row.querySelectorAll('input, select').forEach((input) => {
+    input.addEventListener('input', () => updateScheduleRow(row));
+    input.addEventListener('keydown', (event) => handleScheduleEnter(event, row, 'docMedicineSearch'));
+  });
+  updateScheduleRow(row);
   container.appendChild(row);
   document.getElementById('docMedicineSearch').value = '';
   document.getElementById('medicineSuggestions').classList.add('d-none');
+}
+
+function suggestSupplies(value) {
+  const container = document.getElementById('supplySuggestions');
+  const keyword = value.trim().toLowerCase();
+  container.replaceChildren();
+  container.dataset.activeIndex = '-1';
+  container.classList.toggle('d-none', !keyword);
+  if (!keyword) return;
+  const matches = supplyCatalog.filter((supply) => keyword.split(/\s+/).every((term) => `${supply.code} ${supply.name} ${supply.hint}`.toLowerCase().includes(term))).slice(0, 20);
+  for (const supply of matches) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'list-group-item list-group-item-action py-2';
+    button.textContent = `${supply.code} · ${supply.name} · ${supply.unit}`;
+    button.dataset.itemId = supply.id;
+    button.addEventListener('click', () => selectSupply(supply.id));
+    container.appendChild(button);
+  }
+  if (!matches.length) container.textContent = 'Không tìm thấy vật tư phù hợp.';
+}
+
+function selectSupply(id) {
+  const supply = supplyCatalog.find((item) => item.id === id);
+  if (!supply) return;
+  const container = document.getElementById('selectedSupplyList');
+  if ([...container.children].some((row) => Number(row.dataset.supplyId) === id)) return;
+  const row = document.createElement('div');
+  row.className = 'medication-grid-row mb-2';
+  row.dataset.supplyId = id;
+  const label = document.createElement('span');
+  label.className = 'medication-name';
+  label.textContent = `${supply.name} (${supply.unit})`;
+  const route = createScheduleInput('select', 'Cách sử dụng ' + supply.name, ['Sử dụng', 'Bôi', 'Đắp', 'Thay']);
+  const days = createScheduleInput('number', 'Số ngày sử dụng ' + supply.name, null, 1);
+  const doses = ['Sáng', 'Trưa', 'Chiều', 'Tối'].map((label) => createScheduleInput('number', `${label} ${supply.name}`, null, 0));
+  const quantity = document.createElement('output');
+  quantity.dataset.quantity = '';
+  quantity.className = 'medication-total text-center';
+  const instruction = document.createElement('input');
+  instruction.dataset.instruction = '';
+  instruction.className = 'form-control form-control-sm medication-instruction';
+  instruction.readOnly = true;
+  instruction.placeholder = 'Tự động theo buổi';
+  const remove = document.createElement('button');
+  remove.type = 'button';
+  remove.className = 'btn btn-outline-danger btn-sm';
+  remove.setAttribute('aria-label', 'Xóa ' + supply.name);
+  remove.innerHTML = '<i class="fa-solid fa-trash"></i>';
+  remove.addEventListener('click', () => row.remove());
+  row.append(label, route, days, ...doses, quantity, instruction, remove);
+  row.querySelectorAll('input, select').forEach((input) => {
+    input.addEventListener('input', () => updateScheduleRow(row));
+    input.addEventListener('keydown', (event) => handleScheduleEnter(event, row, 'docSupplySearch'));
+  });
+  updateScheduleRow(row);
+  container.appendChild(row);
+  document.getElementById('docSupplySearch').value = '';
+  document.getElementById('supplySuggestions').classList.add('d-none');
 }
 
 // Init App
@@ -181,7 +321,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Fill form from old patient lookup selection
-function fillPatientForm(id, name, phone, year, gender, address, identity) {
+function fillPatientForm(id, name, phone, dateOfBirth, gender, address, identity) {
   const recPatientId = document.getElementById('recPatientId');
   if (recPatientId) recPatientId.value = id || '';
 
@@ -192,7 +332,7 @@ function fillPatientForm(id, name, phone, year, gender, address, identity) {
   if (recPhone) recPhone.value = phone || '';
 
   const recDob = document.getElementById('recDob');
-  if (recDob) recDob.value = year || '';
+  if (recDob) recDob.value = dateOfBirth || '';
 
   const recGender = document.getElementById('recGender');
   if (recGender) recGender.value = gender || 'Nam';
@@ -227,46 +367,6 @@ function clearReceptionForm() {
   if (recInsuranceType) recInsuranceType.value = 'Dịch vụ';
   const submitLabel = document.getElementById('receptionSubmitLabel');
   if (submitLabel) submitLabel.textContent = 'Đăng Ký & Cấp Số Thứ Tự';
-}
-
-// Handle direct inline registration submit
-function submitInlinePatient() {
-  const nameInput = document.getElementById('recName');
-  const phoneInput = document.getElementById('recPhone');
-  const roomInput = document.getElementById('recRoom');
-  const dobInput = document.getElementById('recDob');
-  const genderInput = document.getElementById('recGender');
-  const patientIdInput = document.getElementById('recPatientId');
-
-  const name = nameInput ? nameInput.value.trim() : '';
-  const phone = phoneInput ? phoneInput.value.trim() : '';
-  const room = roomInput ? roomInput.value : '';
-  const year = dobInput && dobInput.value.trim() ? dobInput.value.trim() : '1995';
-  const gender = genderInput ? genderInput.value : 'Nam';
-  let patientId = patientIdInput ? patientIdInput.value.trim() : '';
-
-  if (!name || !phone) {
-    alert('Vui lòng nhập Họ tên và Số điện thoại!');
-    return;
-  }
-
-  if (!patientId) {
-    patientId = 'BN' + Math.floor(10000 + Math.random() * 90000);
-  }
-
-  const nextStt = 100 + queueData.length + 1;
-  queueData.unshift({
-    stt: nextStt,
-    id: patientId,
-    name: name,
-    genderYear: `${gender} / ${year}`,
-    room: room,
-    status: 'waiting',
-  });
-
-  renderQueueTable();
-  clearReceptionForm();
-  showToast(`Thành công! Đã cấp số ${nextStt} cho bệnh nhân ${name}`);
 }
 
 // Render Reception Table
@@ -347,43 +447,23 @@ function openNewPatientModal() {
   modal.show();
 }
 
-function submitNewPatient() {
-  const nameEl = document.getElementById('newPtName');
-  const phoneEl = document.getElementById('newPtPhone');
-  const roomEl = document.getElementById('newPtRoom');
-
-  const name = nameEl ? nameEl.value : '';
-  const phone = phoneEl ? phoneEl.value : '';
-  const room = roomEl ? roomEl.value : '';
-
-  if (!name || !phone) {
-    alert('Vui lòng điền đầy đủ Họ tên và Số điện thoại!');
+async function submitNewPatient() {
+  const form = document.getElementById('newPatientForm');
+  if (typeof HisValidation !== 'undefined' && !HisValidation.validate(form)) {
     return;
   }
-
-  const newId = 'BN' + Math.floor(10000 + Math.random() * 90000);
-  const nextStt = 100 + queueData.length + 1;
-
-  queueData.unshift({
-    stt: nextStt,
-    id: newId,
-    name: name,
-    genderYear: 'Nam / 1995',
-    room: room,
-    status: 'waiting',
+  const copy = {
+    recName: 'newPtName', recPhone: 'newPtPhone', recDob: 'newPtDob', recGender: 'newPtGender',
+    recIdentity: 'newPtIdentity', recAddress: 'newPtAddress',
+    recRoom: 'newPtRoom', recReason: 'newPtReason'
+  };
+  Object.entries(copy).forEach(([target, source]) => {
+    const targetEl = document.getElementById(target);
+    const sourceEl = document.getElementById(source);
+    if (targetEl && sourceEl) targetEl.value = sourceEl.value;
   });
-  updatePatientFlow({ id: newId, name }, 'waiting', room || 'Phòng khám số 1');
-
-  renderQueueTable();
-
-  // Close modal
-  const modalEl = document.getElementById('newPatientModal');
-  if (modalEl) {
-    const modal = bootstrap.Modal.getInstance(modalEl);
-    if (modal) modal.hide();
-  }
-
-  showToast(`Thành công! Cấp số ${nextStt} cho BN ${name}`);
+  bootstrap.Modal.getInstance(document.getElementById('newPatientModal'))?.hide();
+  await submitInlinePatient();
 }
 
 function editReceptionPatient(id) {
@@ -471,14 +551,14 @@ function loadExaminationQueue(preserveSelection = false) {
   }
   const room = new URLSearchParams(window.location.search).get('phong') || (selection?.department === 'Khoa khám bệnh' ? selection.room : null);
   const today = clinicDate();
-  const flow = Object.values(getPatientFlow()).filter((item) => flowDate(item) === today && ['waiting', 'examining'].includes(item.status) && (!room || item.room === room));
+  const flow = Object.values(getPatientFlow()).filter((item) => flowDate(item) === today && ['waiting', 'examining', 'awaiting_payment'].includes(item.status) && (!room || item.room === room));
   table.replaceChildren();
   flow.forEach((item, index) => {
     const row = document.createElement('tr');
     row.dataset.patientCode = item.id;
-    row.dataset.patientStatus = item.status === 'examining' ? 'EXAMINING' : 'WAITING';
+    row.dataset.patientStatus = item.status === 'examining' ? 'EXAMINING' : item.status === 'awaiting_payment' ? 'ENDED' : 'WAITING';
     row.dataset.queueDate = flowDate(item);
-    for (const value of [index + 1, item.id, item.name, item.room, item.status === 'examining' ? 'Đang khám' : 'Chờ khám']) {
+    for (const value of [index + 1, item.id, item.name, item.room, item.status === 'examining' ? 'Đang khám' : item.status === 'awaiting_payment' ? 'Kết thúc' : 'Chờ khám']) {
       const cell = document.createElement('td');
       cell.textContent = value;
       row.appendChild(cell);
@@ -487,11 +567,36 @@ function loadExaminationQueue(preserveSelection = false) {
     const statusCell = row.children[4];
     const button = document.createElement('button');
     button.type = 'button';
-    button.className = 'btn btn-sm btn-outline-primary';
-    button.textContent = 'Mở hồ sơ';
+    button.className = item.status === 'awaiting_payment' ? 'btn btn-sm btn-outline-warning' : 'btn btn-sm btn-outline-primary';
+    button.textContent = item.status === 'awaiting_payment' ? 'Mở lại bệnh án' : 'Mở hồ sơ';
+    if (item.status === 'awaiting_payment') {
+      if (!item.examinationId) button.disabled = true;
+      else apiRequest(`/examination-history/${item.examinationId}/reopen-eligibility`)
+        .then((eligible) => {
+          if (!eligible) {
+            button.disabled = true;
+            button.textContent = 'Viện phí đã duyệt';
+            button.title = 'Không thể mở lại bệnh án sau khi viện phí được duyệt.';
+          }
+        }).catch(() => {});
+    }
+    button.addEventListener('click', async (event) => {
+      event.stopPropagation();
+      if (item.status !== 'awaiting_payment') return;
+      try {
+        if (!item.examinationId) throw new Error('Không tìm thấy mã hồ sơ khám để mở lại.');
+        const detail = await apiRequest(`/examination-history/${item.examinationId}/reopen`, { method: 'POST' });
+        updatePatientFlow({ id: item.id, name: item.name }, 'examining', item.room);
+        selectExaminationPatient(item.id);
+        restoreExaminationFromHistory(detail);
+        loadExaminationQueue(true);
+        showToast('Đã mở lại bệnh án để bác sĩ chỉnh sửa.');
+      } catch (error) { alert(error.message); }
+    });
     action.appendChild(button);
     row.appendChild(action);
     row.addEventListener('click', () => {
+      if (item.status === 'awaiting_payment') return;
       if (flowDate(item) !== clinicDate()) {
         refreshDailyPatients();
         return;
@@ -507,7 +612,8 @@ function loadExaminationQueue(preserveSelection = false) {
     });
     table.appendChild(row);
   });
-  if (flow.length && !(preserveSelection && document.getElementById('examPatientCode')?.value)) selectExaminationPatient(flow[0].id);
+  const activeFlow = flow.find((item) => ['waiting', 'examining'].includes(item.status));
+  if (activeFlow && !(preserveSelection && document.getElementById('examPatientCode')?.value)) selectExaminationPatient(activeFlow.id);
   if (!flow.length) table.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">Chưa có bệnh nhân được phân vào phòng này trong ngày.</td></tr>';
   filterExaminationQueue();
 }
@@ -544,19 +650,58 @@ function selectExaminationPatient(id) {
   if (!item || (typeof savingExamination !== 'undefined' && savingExamination)) return;
   const code = document.getElementById('examPatientCode');
   if (code.value !== id) {
-    ['docSymptoms', 'docMedicalHistory', 'docIcdCode', 'docDiagnosis', 'docClinicalNote', 'docAdvice', 'docMedicineSearch'].forEach((key) => {
+    ['docSymptoms', 'docMedicalHistory', 'docIcdCode', 'docDiagnosis', 'docClinicalNote', 'docAdvice', 'docMedicineSearch', 'docSupplySearch'].forEach((key) => {
       document.getElementById(key).value = '';
     });
     document.getElementById('docSymptoms').value = item.reason || '';
     document.getElementById('selectedMedicineList').replaceChildren();
+    document.getElementById('selectedSupplyList').replaceChildren();
     document.getElementById('icdSuggestion').textContent = '';
-    ['icdSuggestions', 'medicineSuggestions'].forEach((key) => document.getElementById(key).classList.add('d-none'));
+    ['icdSuggestions', 'medicineSuggestions', 'supplySuggestions'].forEach((key) => document.getElementById(key).classList.add('d-none'));
   }
   code.value = id;
   document.getElementById('docPatientName').textContent = item.name;
   document.getElementById('docPatientMeta').textContent = `Mã BN: ${id} | Đối tượng: Dịch vụ | Phòng: ${item.room}`;
   document.getElementById('examRoomLabel').textContent = item.room;
   document.querySelectorAll('#examinationQueueBody tr').forEach((row) => row.classList.toggle('table-primary', row.dataset.patientCode === id));
+}
+
+function restoreExaminationFromHistory(detail) {
+  document.getElementById('selectedMedicineList').replaceChildren();
+  document.getElementById('selectedSupplyList').replaceChildren();
+  ['docBloodPressure', 'docPulse', 'docTemperature', 'docWeight'].forEach((id) => { document.getElementById(id).value = ''; });
+  const diagnosis = detail.diagnoses?.[0];
+  if (diagnosis) {
+    document.getElementById('docIcdCode').value = diagnosis.code;
+    lookupIcdDiagnosis(diagnosis.code);
+  }
+  document.getElementById('docSymptoms').value = detail.symptoms || '';
+  document.getElementById('docMedicalHistory').value = detail.medicalHistory || '';
+  document.getElementById('docClinicalNote').value = detail.clinicalNote || '';
+  document.getElementById('docAdvice').value = detail.advice || '';
+  const vital = detail.vitalSigns;
+  if (vital) {
+    document.getElementById('docBloodPressure').value = vital.systolic && vital.diastolic ? `${vital.systolic}/${vital.diastolic}` : '';
+    document.getElementById('docPulse').value = vital.pulse ?? '';
+    document.getElementById('docTemperature').value = vital.temperature ?? '';
+    document.getElementById('docWeight').value = vital.weight ?? '';
+  }
+  for (const line of detail.medicines || []) {
+    if (line.inventoryType === 'SUPPLY') selectSupply(line.medicineId);
+    else selectMedicine(line.medicineId);
+    const row = document.querySelector(line.inventoryType === 'SUPPLY'
+      ? `#selectedSupplyList [data-supply-id="${line.medicineId}"]`
+      : `#selectedMedicineList [data-medicine-id="${line.medicineId}"]`);
+    if (!row) continue;
+    if (line.route && row.children[1]) row.children[1].value = line.route;
+    if (row.children[2]) row.children[2].value = Number((line.duration || '').match(/\d+/)?.[0]) || 1;
+    const doseFields = [...row.querySelectorAll('input[type="number"]')].slice(1);
+    const totalDose = Number((line.dosage || '').match(/[\d.]+/)?.[0]) || Number(line.quantity) || 1;
+    const frequency = Number((line.frequency || '').match(/\d+/)?.[0]) || 1;
+    doseFields.forEach((field, index) => { field.value = index < Math.min(frequency, doseFields.length) ? String(totalDose / Math.min(frequency, doseFields.length)) : '0'; });
+    updateScheduleRow(row);
+    if (line.instruction) row.querySelector('[data-instruction]').value = line.instruction;
+  }
 }
 
 // Lab Section Logic
@@ -699,17 +844,25 @@ function openPrintModal() {
   document.getElementById('invPtCode').textContent = selectedBillingItem.patientCode;
   document.getElementById('invVisitCode').textContent = selectedBillingItem.visitCode;
   document.getElementById('invDate').textContent = new Date().toLocaleDateString('vi-VN');
-  document.getElementById('invPayMethod').textContent = document.getElementById('payCash').checked ? 'Tiền mặt' : 'Chuyển khoản ngân hàng';
+  document.getElementById('invPtDob').textContent = selectedBillingItem.dateOfBirth || '—';
+  document.getElementById('invPtGender').textContent = ({ MALE: 'Nam', FEMALE: 'Nữ', OTHER: 'Khác' })[selectedBillingItem.gender] || '—';
+  document.getElementById('invPtAddress').textContent = selectedBillingItem.address || '—';
+  document.getElementById('invRoom').textContent = selectedBillingItem.roomName || '—';
+  document.getElementById('invDiagnosis').textContent = selectedBillingItem.diagnosis || '—';
   document.getElementById('invCashier').textContent = document.getElementById('billCashier').textContent;
   document.getElementById('invTotalAmount').textContent = `${workflowMoney(selectedBillingItem.totalAmount)} VNĐ`;
+  document.getElementById('invPatientShare').textContent = `${workflowMoney(selectedBillingItem.totalAmount)} VNĐ`;
   const body = document.getElementById('invoiceItemsBody');
   body.replaceChildren();
   selectedBillingItem.lines.forEach((line, index) => {
     const row = document.createElement('tr');
-    [index + 1, line.description, `${line.quantity} ${line.unit || ''}`.trim(), workflowMoney(line.unitPrice), workflowMoney(line.totalPrice)].forEach((value, column) => {
+    const amount = workflowMoney(line.totalPrice);
+    [`${line.statementCategory || '12. Dịch vụ khác'}: ${line.description}`,
+      line.unit || '—', line.quantity, workflowMoney(line.unitPrice), '0 đ', '100%', amount,
+      '0%', '0 đ', '0 đ', '0 đ', '0 đ', amount].forEach((value, column) => {
       const cell = document.createElement('td');
       cell.textContent = value;
-      if (column > 0) cell.classList.toggle('text-end', column > 1);
+      if (column >= 2) cell.classList.add('text-end');
       row.appendChild(cell);
     });
     body.appendChild(row);
@@ -725,7 +878,7 @@ async function confirmPayment() {
   const button = document.getElementById('confirmPaymentButton');
   button.disabled = true;
   try {
-    const method = document.getElementById('payCash').checked ? 'CASH' : 'BANK_TRANSFER';
+    const method = 'CASH';
     const receipt = await apiRequest(`/workflow/billing/${selectedBillingItem.visitId}/pay`, {
       method: 'POST',
       body: JSON.stringify({ method }),
@@ -883,12 +1036,20 @@ function mapGender(value) {
 
 function parseDate(value) {
   if (!value) return null;
-  const year = value.match(/^\d{4}$/);
-  return year ? `${value}-01-01` : value;
+  if (/^\d{4}$/.test(value)) return `${value}-01-01`;
+  const dateMatch = value.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (dateMatch) {
+    return `${dateMatch[3]}-${dateMatch[2].padStart(2, '0')}-${dateMatch[1].padStart(2, '0')}`;
+  }
+  return value;
 }
 
 async function submitLogin(event) {
   event.preventDefault();
+  const form = document.getElementById('loginForm');
+  if (typeof HisValidation !== 'undefined' && !HisValidation.validate(form)) {
+    return;
+  }
   const username = document.getElementById('username').value.trim();
   const password = document.getElementById('password').value;
   const message = document.getElementById('loginMessage');
@@ -902,8 +1063,14 @@ async function submitLogin(event) {
     const destination = '/rooms';
     window.location.href = destination;
   } catch (error) {
-    message.textContent = error.message;
+    const isBadCredentials = error.message === 'Invalid username or password' || error.message.includes('401');
+    const msg = isBadCredentials ? 'Tên đăng nhập hoặc mật khẩu không chính xác.' : error.message;
+    message.textContent = msg;
     message.className = 'text-center text-danger small mt-3';
+    if (typeof HisValidation !== 'undefined') {
+      HisValidation.mark(document.getElementById('username'), 'Kiểm tra lại tên đăng nhập');
+      HisValidation.mark(document.getElementById('password'), 'Kiểm tra lại mật khẩu');
+    }
   }
 }
 
@@ -975,6 +1142,10 @@ function renderDailyReceptionQueue() {
 }
 
 async function submitInlinePatient() {
+  const form = document.getElementById('inlineReceptionForm');
+  if (typeof HisValidation !== 'undefined' && !HisValidation.validate(form)) {
+    return;
+  }
   const name = document.getElementById('recName')?.value.trim();
   const phone = document.getElementById('recPhone')?.value.trim();
   if (!name || !phone) return alert('Vui lòng nhập Họ tên và Số điện thoại!');
@@ -1029,6 +1200,16 @@ async function submitInlinePatient() {
     showToast(existing ? `Đã cập nhật thông tin bệnh nhân ${name}` : `Đã tạo hồ sơ bệnh nhân ${name}`);
   } catch (error) {
     console.error('Không thể tiếp nhận bệnh nhân', error);
+    if (typeof HisValidation !== 'undefined' && error.fieldErrors) {
+      HisValidation.serverErrors(error, {
+        fullName: 'recName',
+        phone: 'recPhone',
+        dateOfBirth: 'recDob',
+        gender: 'recGender',
+        identityNumber: 'recIdentity',
+        address: 'recAddress'
+      });
+    }
     alert(`Không thể tiếp nhận bệnh nhân: ${error.message}`);
   }
 }
@@ -1075,7 +1256,34 @@ async function addRoom() {
   }
 }
 
+function setupKeyboardNavigation() {
+  document.addEventListener('keydown', (event) => {
+    if (event.defaultPrevented || event.key !== 'Enter' || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+    const current = event.target;
+    if (!(current instanceof HTMLElement) || current.matches('textarea, button, input[type="hidden"], input[type="checkbox"], input[type="radio"], input[type="file"], [readonly], [disabled], [data-enter-nav="off"]')) return;
+
+    const form = current.closest('form');
+    const scope = form || current.closest('main') || document.body;
+    const fields = [...scope.querySelectorAll('input, select, textarea')].filter((field) => {
+      if (field.matches('textarea, input[type="hidden"], input[type="checkbox"], input[type="radio"], input[type="file"], [readonly], [disabled], [data-enter-nav="off"]')) return false;
+      if (field.offsetParent === null && field !== current) return false;
+      return true;
+    });
+    const currentIndex = fields.indexOf(current);
+    if (currentIndex < 0) return;
+    event.preventDefault();
+    const next = fields[currentIndex + 1];
+    if (next) {
+      next.focus();
+      if (typeof next.select === 'function' && next.type === 'search') next.select();
+    } else if (form) {
+      form.requestSubmit();
+    }
+  });
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
+  setupKeyboardNavigation();
   document.querySelectorAll('.navbar-nav .nav-link').forEach((link) => {
     const path = window.location.pathname === '/medical-examination' ? '/examination' : window.location.pathname;
     link.classList.toggle('active', link.getAttribute('href') === path);
@@ -1101,6 +1309,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
   const examSearch = document.getElementById('examSearch');
   if (examSearch) examSearch.addEventListener('input', filterExaminationQueue);
+  ['examFrom', 'examTo', 'examStatusFilter'].forEach((id) => document.getElementById(id)?.addEventListener('change', filterExaminationQueue));
   if (document.getElementById('cashierQueueList') && sessionStorage.getItem('hisUser')) {
     await loadWorkflowBilling();
   }

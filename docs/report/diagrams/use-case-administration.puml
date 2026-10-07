@@ -1,0 +1,32 @@
+@startuml
+title Use Case quản trị, kho và báo cáo
+left to right direction
+skinparam packageStyle rectangle
+actor "Quản trị viên" as Admin
+actor "Dược sĩ" as Pharmacist
+actor "Lễ tân" as Reception
+rectangle "TrungCang HIS" {
+  package "Quản trị hệ thống" {
+    usecase "Quản lý nhân viên" as Employee
+    usecase "Quản lý khoa\nvà phòng khám" as Room
+  }
+  package "Kho" {
+    usecase "Lọc kho thuốc\nvà kho vật tư" as Filter
+    usecase "Quản lý hàng hóa\nvà lô tồn" as Batch
+  }
+  package "Báo cáo" {
+    usecase "Lọc theo ngày, phòng,\ntrạng thái, thanh toán, hàng hóa" as Report
+    usecase "Xuất CSV, JSON\nhoặc HTML" as Export
+  }
+}
+Admin --> Employee
+Admin --> Room
+Admin --> Filter
+Admin --> Batch
+Admin --> Report
+Pharmacist --> Filter
+Pharmacist --> Batch
+Pharmacist --> Report
+Reception --> Report
+Report .> Export : <<include>>
+@enduml

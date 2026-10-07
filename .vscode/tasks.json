@@ -1,0 +1,13 @@
+﻿{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Spring Boot: Run Trung Cang HIS",
+      "type": "process",
+      "command": "${workspaceFolder}/mvnw.cmd",
+      "args": ["spring-boot:run"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    }
+  ]
+}

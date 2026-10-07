@@ -1,0 +1,26 @@
+@startuml
+title Kiến trúc TrungCang HIS
+skinparam componentStyle rectangle
+actor "Người dùng (Admin, Lễ tân, Bác sĩ, Dược sĩ)" as User
+rectangle "Trình duyệt" {
+  component "Thymeleaf + Bootstrap" as UI
+  component "JavaScript" as JS
+}
+package "Spring Boot" {
+  component "ClientPageController" as Page
+  component "REST Controllers" as Api
+  component "Services" as Service
+  component "JPA Repositories" as Repo
+  component "Spring Security" as Security
+}
+database "MySQL - Dữ liệu vận hành" as MySQL
+database "H2 in-memory - Chỉ kiểm thử" as H2
+User --> UI
+UI --> Page
+JS --> Api
+Api --> Security
+Api --> Service
+Service --> Repo
+Repo --> MySQL
+Repo ..> H2 : test profile
+@enduml

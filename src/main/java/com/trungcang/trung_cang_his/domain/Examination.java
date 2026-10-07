@@ -19,8 +19,11 @@ public class Examination {
     @Column(columnDefinition="TEXT") private String advice;
     @Column(columnDefinition="TEXT") private String examinationResult;
     @Enumerated(EnumType.STRING) @Column(length=20) private Status status = Status.DRAFT;
+    @Enumerated(EnumType.STRING) @Column(length=20)
+    private PaperRecordStatus paperRecordStatus = PaperRecordStatus.PENDING_PRINT;
     private LocalDateTime examinedAt;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     public enum Status { DRAFT, COMPLETED }
+    public enum PaperRecordStatus { PENDING_PRINT, PRINTED, HAND_SIGNED }
 }

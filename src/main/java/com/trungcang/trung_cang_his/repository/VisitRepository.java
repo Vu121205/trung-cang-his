@@ -9,4 +9,7 @@ import java.util.List;
 public interface VisitRepository extends JpaRepository<Visit, Long> {
 	List<Visit> findAllByStatusOrderByVisitDateAscVisitTimeAsc(Visit.Status status);
 	java.util.Optional<Visit> findByVisitCode(String visitCode);
+	@org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+	@org.springframework.data.jpa.repository.Query("select v from Visit v where v.id = :id")
+	java.util.Optional<Visit> findByIdForUpdate(@org.springframework.data.repository.query.Param("id") Long id);
 }

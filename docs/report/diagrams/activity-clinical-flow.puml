@@ -1,0 +1,20 @@
+@startuml
+title Quy trình tiếp nhận và hoàn tất khám
+start
+partition "Lễ tân" {
+  :Tạo hoặc cập nhật hồ sơ bệnh nhân;
+  :Chọn phòng khám và lý do khám;
+  :Lưu hàng chờ trong localStorage;
+}
+partition "Bác sĩ" {
+  :Chọn bệnh nhân trong hàng chờ của phòng;
+  :Nhập dấu hiệu sinh tồn, triệu chứng\\nvà chẩn đoán ICD;
+  :Chỉ định thuốc và/hoặc vật tư;
+  :Xác nhận hoàn tất khám;
+}
+partition "Hệ thống" {
+  :Lưu Visit, Examination, chẩn đoán\\nvà đơn thuốc trong một transaction;
+  :Chuyển Visit sang WAITING_PAYMENT;
+}
+stop
+@enduml

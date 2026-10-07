@@ -38,7 +38,7 @@
               <div class="card-header d-flex justify-content-between align-items-center">
                 <span>
                   <i class="fa-solid fa-boxes-packing me-2"></i>
-                  Chi Tiết Cấp Thuốc &amp; Kiểm Kho
+                  Chi Tiết Cấp Thuốc / Vật Tư &amp; Kiểm Kho
                 </span>
                 <span class="badge bg-outline-secondary" id="pharmacyPatientBadge">Chưa chọn đơn</span>
               </div>
@@ -55,7 +55,7 @@
                     <thead class="table-light">
                       <tr>
                         <th>STT</th>
-                        <th>Tên thuốc / Hàm lượng</th>
+                        <th>Tên thuốc / Hàm lượng / Cách dùng</th>
                         <th class="text-center">Số lượng</th>
                         <th>Đơn vị</th>
                         <th class="text-center">Tồn kho</th>
@@ -68,13 +68,13 @@
                 <div class="p-3 bg-light rounded border mb-3">
                   <div class="form-check">
                     <input class="form-check-input" id="checkDispense" type="checkbox" />
-                    <label class="form-check-label fw-semibold" for="checkDispense">Xác nhận đã kiểm tra đúng tên thuốc, số lượng, hạn sử dụng và đóng gói đủ cho bệnh nhân.</label>
+                  <label class="form-check-label fw-semibold" for="checkDispense">Xác nhận đã kiểm tra đúng thuốc/vật tư, số lượng, hạn sử dụng và đóng gói đủ cho bệnh nhân.</label>
                   </div>
                 </div>
                 <div class="text-end">
                   <button class="btn btn-success px-4" id="confirmDispenseButton" onclick="confirmDispense()" disabled>
                     <i class="fa-solid fa-box-open me-1"></i>
-                    Xác Nhận Xuất Kho &amp; Cấp Thuốc
+                    Xác Nhận Xuất Kho &amp; Cấp Thuốc / Vật Tư
                   </button>
                 </div>
               </div>
@@ -109,7 +109,6 @@
         }
       })();
     </script>
-    <footer th:replace="~{fragments/footer :: footer}"></footer>
     <th:block th:replace="~{fragments/footer :: scripts}"></th:block>
   </body>
 </html>

@@ -4,6 +4,7 @@
   let totalPages = 0;
   let listRequest = 0;
   let detailRequest = 0;
+  let currentPrescriptionId = null;
   const displayDate = (value) => (value ? new Date(value).toLocaleString('vi-VN') : '—');
   function message(value) {
     element('historyMessage').textContent = value;
@@ -76,6 +77,8 @@
       if (request !== detailRequest) return;
       const body = element('historyDetailBody');
       body.replaceChildren();
+      currentPrescriptionId = detail.prescriptionId || null;
+      element('historyPrintPrescription').classList.toggle('d-none', !currentPrescriptionId);
       element('historyDetailTitle').textContent = `${detail.visit.patientName} — ${detail.visit.visitCode}`;
       const fields = [
         ['Ngày khám', displayDate(detail.visit.examinedAt)],
@@ -120,7 +123,21 @@
   function closeDetail() {
     detailRequest++;
     element('historyDetail').classList.add('d-none');
+    currentPrescriptionId = null;
+    element('historyPrintPrescription').classList.add('d-none');
   }
+  async function printPrescription() {
+    if (!currentPrescriptionId) return;
+    try {
+      const data = await apiRequest(`/prescriptions/${currentPrescriptionId}/print`);
+      const lines = data.lines.map((line, index) => `<tr><td>${index + 1}</td><td>${escapeHtml([line.medicineName, line.activeIngredient, line.strength, line.dosageForm].filter(Boolean).join(' · '))}</td><td>${escapeHtml(line.dosage || '—')}</td><td>${escapeHtml(line.frequency || '—')}</td><td>${escapeHtml(line.route || '—')}</td><td>${escapeHtml(line.duration || '—')}</td><td>${escapeHtml(line.quantity)} ${escapeHtml(line.unit || '')}</td><td>${escapeHtml(line.instruction || '—')}</td></tr>`).join('');
+      const popup = window.open('', '_blank', 'width=1100,height=800');
+      if (!popup) throw new Error('Trình duyệt đã chặn cửa sổ in.');
+      popup.document.write(`<!doctype html><html lang="vi"><head><meta charset="utf-8"><title>Đơn thuốc ${escapeHtml(data.prescriptionCode)}</title><style>body{font-family:Arial,sans-serif;margin:28px;color:#111}h2,h3{text-align:center;margin:4px}table{border-collapse:collapse;width:100%;margin-top:18px}th,td{border:1px solid #555;padding:6px;vertical-align:top;font-size:12px}th{background:#eee}.meta{line-height:1.7}.sign{display:flex;justify-content:space-around;text-align:center;margin-top:55px}.sign span{display:block;margin-top:45px}.note{margin-top:18px;white-space:pre-wrap}</style></head><body><h2>${escapeHtml(data.facilityName || 'Phòng khám Trung Cang')}</h2><div style="text-align:center">Địa chỉ: ${escapeHtml(data.facilityAddress || '—')} · Điện thoại: ${escapeHtml(data.facilityPhone || '—')}</div><h3>ĐƠN THUỐC / BẢNG KÊ THUỐC</h3><div class="meta"><b>Mã đơn:</b> ${escapeHtml(data.prescriptionCode)}<br><b>Họ tên:</b> ${escapeHtml(data.patientName)} &nbsp; <b>Mã BN:</b> ${escapeHtml(data.patientCode)}<br><b>Ngày sinh:</b> ${escapeHtml(data.dateOfBirth || '—')} &nbsp; <b>Giới tính:</b> ${escapeHtml(data.gender || '—')} &nbsp; <b>Cân nặng:</b> ${escapeHtml(data.weight || '—')}<br><b>Số định danh:</b> ${escapeHtml(data.identityNumber || '—')} &nbsp; <b>BHYT:</b> ${escapeHtml(data.healthInsuranceNumber || '—')}<br><b>Nơi cư trú:</b> ${escapeHtml(data.address || '—')} &nbsp; <b>Điện thoại:</b> ${escapeHtml(data.phone || '—')}<br><b>Chẩn đoán:</b> ${escapeHtml(data.diagnosis || '—')}</div><table><thead><tr><th>STT</th><th>Thuốc, hoạt chất, hàm lượng/dạng dùng</th><th>Liều/lần</th><th>Số lần/ngày</th><th>Đường dùng</th><th>Số ngày</th><th>Số lượng</th><th>Cách dùng/thời điểm</th></tr></thead><tbody>${lines || '<tr><td colspan="8">Không có thuốc</td></tr>'}</tbody></table><div class="note"><b>Lời dặn:</b> ${escapeHtml(data.advice || '—')}</div><div class="sign"><div>Bệnh nhân/người đại diện<br><span>(Ký, ghi rõ họ tên)</span></div><div>Bác sĩ/Y sĩ khám bệnh<br><span>(Ký, ghi rõ họ tên)<br>${escapeHtml(data.doctorName || '—')}</span></div></div><script>window.onload=()=>window.print()<\/script></body></html>`);
+      popup.document.close();
+    } catch (error) { message(error.message); }
+  }
+  function escapeHtml(value) { return String(value ?? '').replace(/[&<>"']/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char])); }
   element('historyFilters').addEventListener('submit', (event) => {
     event.preventDefault();
     page = 0;
@@ -145,5 +162,6 @@
     }
   });
   element('historyClose').addEventListener('click', closeDetail);
+  element('historyPrintPrescription').addEventListener('click', printPrescription);
   load();
 })();

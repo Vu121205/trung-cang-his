@@ -17,6 +17,9 @@ public class Prescription {
     private LocalDateTime prescriptionDate;
     @Column(columnDefinition="TEXT") private String note;
     @Enumerated(EnumType.STRING) @Column(length=20) private Status status = Status.DRAFT;
+    @Enumerated(EnumType.STRING) @Column(length=20)
+    private PaperRecordStatus paperRecordStatus = PaperRecordStatus.PENDING_PRINT;
     @Column(precision=15, scale=2) private BigDecimal totalAmount = BigDecimal.ZERO;
     public enum Status { DRAFT, PRESCRIBED, DISPENSED, CANCELLED }
+    public enum PaperRecordStatus { PENDING_PRINT, PRINTED, HAND_SIGNED }
 }

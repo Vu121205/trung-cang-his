@@ -1,0 +1,13 @@
+﻿{
+  "configurations": [
+    {
+      "type": "java",
+      "name": "Spring Boot: Trung Cang HIS",
+      "request": "launch",
+      "mainClass": "com.trungcang.trung_cang_his.TrungCangHisApplication",
+      "projectName": "trung-cang-his",
+      "cwd": "${workspaceFolder}",
+      "envFile": "${workspaceFolder}/.env"
+    }
+  ]
+}

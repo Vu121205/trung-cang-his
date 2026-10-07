@@ -2,16 +2,19 @@
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
   <body>
     <ul th:fragment="sidebar" class="navbar-nav me-auto mb-2 mb-lg-0 mt-2 mt-lg-0 ms-lg-3">
-      <li class="nav-item" th:if="${canManageStaff}">
-        <a class="nav-link" href="/employees">
-          <i class="fa-solid fa-users-gear me-1"></i>Quản lý nhân viên
+      <li class="nav-item dropdown" th:if="${canManageStaff}">
+        <a class="nav-link dropdown-toggle" href="#" id="adminMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+          <i class="fa-solid fa-shield-halved me-1"></i>Quản trị hệ thống
         </a>
+        <div class="dropdown-menu" aria-labelledby="adminMenu">
+          <a class="dropdown-item" href="/employees"><i class="fa-solid fa-users-gear me-2"></i>Quản lý nhân viên</a>
+          <a class="dropdown-item" href="/rooms"><i class="fa-solid fa-door-open me-2"></i>Thiết lập phòng</a>
+          <a class="dropdown-item" href="/inventory"><i class="fa-solid fa-boxes-stacked me-2"></i>Quản lý kho</a>
+          <a class="dropdown-item" href="/reports"><i class="fa-solid fa-chart-line me-2"></i>Báo cáo</a>
+        </div>
       </li>
-      <li class="nav-item">
-        <a class="nav-link" href="/rooms">
-          <i class="fa-solid fa-door-open me-1"></i>
-          Thiết lập phòng
-        </a>
+      <li class="nav-item" th:unless="${canManageStaff}">
+        <a class="nav-link" href="/rooms"><i class="fa-solid fa-door-open me-1"></i>Thiết lập phòng</a>
       </li>
       <li class="nav-item" th:if="${canReceive}">
         <a class="nav-link" href="/reception">
@@ -43,6 +46,18 @@
                 Lịch sử khám bệnh
               </a>
             </li>
-          </ul>
+            <li class="nav-item" th:if="${canManageInventory and !canManageStaff}">
+              <a class="nav-link" href="/inventory">
+                <i class="fa-solid fa-boxes-stacked me-1"></i>
+                Quản lý kho
+              </a>
+            </li>
+            <li class="nav-item" th:if="${canViewReports and !canManageStaff}">
+              <a class="nav-link" href="/reports">
+                <i class="fa-solid fa-chart-line me-1"></i>
+                Báo cáo
+              </a>
+            </li>
+    </ul>
   </body>
 </html>

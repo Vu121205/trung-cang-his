@@ -20,5 +20,3 @@ jobs:
           node-version: '22'
       - run: node src/test/js/daily-patients.test.cjs
       - run: sh ./mvnw -B -ntp verify
-      - name: Verify Docker build
-        run: docker build -t trung-cang-his:ci .

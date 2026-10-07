@@ -11,6 +11,12 @@ import java.time.LocalDate;
 import java.util.List;
 
 public interface MedicineBatchRepository extends JpaRepository<MedicineBatch, Long> {
+    List<MedicineBatch> findAllByMedicine_IdOrderByExpiryDateAscIdAsc(Long medicineId);
+
+    List<MedicineBatch> findAllByOrderByExpiryDateAscIdAsc();
+
+    java.util.Optional<MedicineBatch> findByMedicine_IdAndBatchNumber(Long medicineId, String batchNumber);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select batch from MedicineBatch batch where batch.medicine.id = :medicineId and batch.quantity > 0 and (batch.expiryDate is null or batch.expiryDate >= :today) order by batch.expiryDate, batch.id")
     List<MedicineBatch> findAvailableForDispensing(@Param("medicineId") Long medicineId, @Param("today") LocalDate today);

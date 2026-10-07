@@ -20,7 +20,10 @@ public class Medicine {
     @Column(length=100) private String registrationNumber;
     @Column(nullable=false, precision=15, scale=2) private BigDecimal price = BigDecimal.ZERO;
     private Integer minStock = 0;
+    @Enumerated(EnumType.STRING) @Column(length=20)
+    private InventoryType inventoryType = InventoryType.MEDICINE;
     @Enumerated(EnumType.STRING) @Column(length=20) private Status status = Status.ACTIVE;
     private LocalDateTime createdAt;
     public enum Status { ACTIVE, INACTIVE }
+    public enum InventoryType { MEDICINE, SUPPLY }
 }

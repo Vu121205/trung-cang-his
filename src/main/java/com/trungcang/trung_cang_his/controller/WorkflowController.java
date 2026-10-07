@@ -27,5 +27,7 @@ public class WorkflowController {
     public List<WorkflowService.DispenseItem> pendingDispensing() { return workflow.pendingDispensing(); }
 
     @PostMapping("/dispensing/{prescriptionId}/confirm")
-    public WorkflowService.DispenseResult dispense(@PathVariable Long prescriptionId) { return workflow.dispense(prescriptionId); }
+    public WorkflowService.DispenseResult dispense(@PathVariable Long prescriptionId, Authentication authentication) {
+        return workflow.dispense(prescriptionId, authentication.getName());
+    }
 }

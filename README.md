@@ -78,7 +78,6 @@ trung-cang-his/
 │               └── trungcang/
 │                   └── trung_cang_his/
 │                       └── TrungCangHisApplicationTests.java
-├── HELP.md
 ├── pom.xml
 ├── mvnw
 ├── mvnw.cmd
@@ -395,7 +394,7 @@ Ngày 25/09/2026: 15 kiểm thử đạt, đóng gói JAR thành công; đã ch�
 
 ## 8. Chạy dự án
 
-Triển khai website miễn phí bằng Render và Aiven MySQL: xem [DEPLOY.md](DEPLOY.md). Repository có sẵn `Dockerfile`, `render.yaml` và GitHub Actions; profile `prod` tắt dữ liệu/tài khoản demo, dùng mật khẩu qua biến môi trường.
+Repository có GitHub Actions để kiểm thử Maven và JavaScript. Profile `prod` tắt dữ liệu/tài khoản demo và dùng mật khẩu qua biến môi trường khi cần vận hành môi trường riêng.
 
 ### Yêu cầu
 
@@ -463,5 +462,15 @@ Lệnh này đã chạy thành công sau khi chuyển môi trường sang Java 2
 - Mật khẩu dùng chung hiện phục vụ môi trường demo; production cần quản lý secret ngoài source code và bắt buộc đổi mật khẩu.
 
 ## 11. Kết luận
+
+## Cập nhật 30/09/2026
+
+- Header hiển thị thương hiệu **TrungCang HIS**; footer không xuất hiện tại trang đăng nhập và trang thiết lập phòng.
+- Danh mục tồn kho có thêm trường `inventoryType`: `MEDICINE` cho kho thuốc và `SUPPLY` cho kho vật tư. Dữ liệu cũ chưa có loại kho được hiểu là thuốc để giữ tương thích.
+- Trang quản lý kho có bộ lọc kho, hiển thị đơn vị từ danh mục hàng hóa; tổng tồn khả dụng và hạn dùng gần nhất được tính cùng từ các lô còn số lượng, chưa hết hạn.
+- Trang khám bệnh cho phép chọn vật tư và số lượng độc lập với đơn thuốc. Vật tư đi qua luồng thanh toán/cấp phát chung và được trừ tồn theo lô khi dược xác nhận.
+- Quy ước dự án: mọi thay đổi chức năng hoặc giao diện phải cập nhật tài liệu Markdown liên quan trong cùng thay đổi mã nguồn.
+- Ngày 30/09/2026: đã đối chiếu file `KhoaKhamBenh(cũ).xls` theo `MAVATTU` và cập nhật đơn vị tính `DVT` cho 125/125 mã tương ứng trong MySQL; không còn bản ghi nào trong nhóm này giữ giá trị đơn vị lỗi `??n v?`.
+- Ngày 30/09/2026: đã phân loại lại 125 mã từ `KhoaKhamBenh(cũ).xls`: 121 mã vật tư/hóa chất/test/thiết bị vào `SUPPLY` (Kho vật tư), 4 mã thuốc hoặc dung dịch tiêm vào `MEDICINE` (Kho thuốc).
 
 Trung Cang HIS là một dự án nền tảng cho hệ thống quản lý bệnh viện, với mô hình dữ liệu, nghiệp vụ, giao diện demo và tầng backend CRUD đang dần được hoàn thiện. Dự án đã có nền tảng khả quan để tiếp tục mở rộng thành hệ thống HIS vận hành thực tế.

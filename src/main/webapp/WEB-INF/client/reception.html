@@ -45,21 +45,21 @@
                   <input id="recPatientId" type="hidden" value="" />
                   <div class="row g-2 mb-2">
                     <div class="col-md-7">
-                      <label class="form-label extra-small fw-semibold mb-1">Họ và Tên <span class="required-mark">*</span></label>
-                      <input class="form-control form-control-sm" id="recName" placeholder="NHẬP HỌ VÀ TÊN..." required="" type="text" />
+                      <label class="form-label extra-small fw-semibold mb-1" for="recName">Họ và Tên <span class="required-mark">*</span></label>
+                      <input class="form-control form-control-sm" id="recName" placeholder="NHẬP HỌ VÀ TÊN..." required="" type="text" minlength="2" maxlength="150" data-validation="person-name" />
                     </div>
                     <div class="col-md-5">
-                      <label class="form-label extra-small fw-semibold mb-1">Số Điện Thoại <span class="required-mark">*</span></label>
-                      <input class="form-control form-control-sm" id="recPhone" placeholder="09xxxxxxxx" required="" type="tel" />
+                      <label class="form-label extra-small fw-semibold mb-1" for="recPhone">Số Điện Thoại <span class="required-mark">*</span></label>
+                      <input class="form-control form-control-sm" id="recPhone" placeholder="09xxxxxxxx" required="" type="tel" data-validation="phone" />
                     </div>
                   </div>
                   <div class="row g-2 mb-2">
                     <div class="col-md-4">
-                      <label class="form-label extra-small fw-semibold mb-1">Năm sinh / Ngày</label>
-                      <input class="form-control form-control-sm" id="recDob" placeholder="1995 hoặc DD/MM/YYYY" type="text" />
+                      <label class="form-label extra-small fw-semibold mb-1" for="recDob">Ngày sinh</label>
+                      <input class="form-control form-control-sm" id="recDob" type="date" data-validation="birth-date" />
                     </div>
                     <div class="col-md-4">
-                      <label class="form-label extra-small fw-semibold mb-1">Giới tính</label>
+                      <label class="form-label extra-small fw-semibold mb-1" for="recGender">Giới tính</label>
                       <select class="form-select form-select-sm" id="recGender">
                         <option value="Nam">Nam</option>
                         <option value="Nữ">Nữ</option>
@@ -67,27 +67,29 @@
                       </select>
                     </div>
                     <div class="col-md-4">
-                      <label class="form-label extra-small fw-semibold mb-1">Đối tượng</label>
+                      <label class="form-label extra-small fw-semibold mb-1" for="recInsuranceType">Đối tượng</label>
                       <input class="form-control form-control-sm" id="recInsuranceType" value="Dịch vụ" readonly />
                     </div>
                   </div>
                   <div class="row g-2 mb-2">
                     <div class="col-md-6">
-                      <label class="form-label extra-small fw-semibold mb-1">Số CCCD</label>
-                      <input class="form-control form-control-sm" id="recIdentity" placeholder="Nhập số CCCD (nếu có)..." type="text" />
+                      <label class="form-label extra-small fw-semibold mb-1" for="recIdentity">Số CCCD</label>
+                      <input class="form-control form-control-sm" id="recIdentity" placeholder="Nhập số CCCD (nếu có)..." type="text" maxlength="20" data-validation="identity" />
                     </div>
+                  </div>
+                  <div class="row g-2 mb-2">
                     <div class="col-md-6">
-                      <label class="form-label extra-small fw-semibold mb-1">Phòng khám tiếp nhận <span class="required-mark">*</span></label>
+                      <label class="form-label extra-small fw-semibold mb-1" for="recRoom">Phòng khám tiếp nhận <span class="required-mark">*</span></label>
                       <select class="form-select form-select-sm" id="recRoom" required=""><option value="">-- Chọn phòng khám --</option></select>
                     </div>
                   </div>
                   <div class="mb-2">
-                    <label class="form-label extra-small fw-semibold mb-1">Địa chỉ thường trú</label>
-                    <input class="form-control form-control-sm" id="recAddress" placeholder="Số nhà, Đường, Phường/Xã, Quận/Huyện..." type="text" />
+                    <label class="form-label extra-small fw-semibold mb-1" for="recAddress">Địa chỉ thường trú</label>
+                    <input class="form-control form-control-sm" id="recAddress" placeholder="Số nhà, Đường, Phường/Xã, Quận/Huyện..." type="text" maxlength="255" />
                   </div>
                   <div class="mb-3">
-                    <label class="form-label extra-small fw-semibold mb-1">Lý do khám / Triệu chứng ban đầu</label>
-                    <textarea class="form-control form-control-sm" id="recReason" placeholder="Đau đầu, sốt, tái khám, kiểm tra định kỳ..." rows="2"></textarea>
+                    <label class="form-label extra-small fw-semibold mb-1" for="recReason">Lý do khám / Triệu chứng ban đầu</label>
+                    <textarea class="form-control form-control-sm" id="recReason" placeholder="Đau đầu, sốt, tái khám, kiểm tra định kỳ..." rows="2" maxlength="500"></textarea>
                   </div>
                   <div class="d-grid">
                     <button class="btn btn-primary btn-sm fw-semibold py-2" type="submit">
@@ -145,18 +147,18 @@
             <button aria-label="Close" class="btn-close" data-bs-dismiss="modal" type="button"></button>
           </div>
           <div class="modal-body">
-            <form id="newPatientForm">
+            <form id="newPatientForm" onsubmit="event.preventDefault(); submitNewPatient();">
               <div class="row g-3">
                 <div class="col-md-6">
-                  <label class="form-label fw-semibold">Họ và Tên (*)</label>
-                  <input class="form-control" id="newPtName" placeholder="Nhập họ tên đầy đủ..." required="" type="text" />
+                  <label class="form-label fw-semibold" for="newPtName">Họ và Tên <span class="required-mark">*</span></label>
+                  <input class="form-control" id="newPtName" placeholder="Nhập họ tên đầy đủ..." required="" type="text" minlength="2" maxlength="150" data-validation="person-name" />
                 </div>
                 <div class="col-md-3">
-                  <label class="form-label fw-semibold">Ngày sinh / Năm</label>
-                  <input class="form-control" id="newPtDob" placeholder="YYYY hoặc DD/MM/YYYY" type="text" />
+                  <label class="form-label fw-semibold" for="newPtDob">Ngày sinh</label>
+                  <input class="form-control" id="newPtDob" type="date" data-validation="birth-date" />
                 </div>
                 <div class="col-md-3">
-                  <label class="form-label fw-semibold">Giới tính</label>
+                  <label class="form-label fw-semibold" for="newPtGender">Giới tính</label>
                   <select class="form-select" id="newPtGender">
                     <option>Nam</option>
                     <option>Nữ</option>
@@ -164,24 +166,25 @@
                   </select>
                 </div>
                 <div class="col-md-6">
-                  <label class="form-label fw-semibold">Số điện thoại (*)</label>
-                  <input class="form-control" id="newPtPhone" placeholder="09xxxx..." required="" type="tel" />
+                  <label class="form-label fw-semibold" for="newPtPhone">Số điện thoại <span class="required-mark">*</span></label>
+                  <input class="form-control" id="newPtPhone" placeholder="09xxxx..." required="" type="tel" data-validation="phone" />
                 </div>
                 <div class="col-md-6">
-                  <label class="form-label fw-semibold">Số CCCD / BHYT</label>
-                  <input class="form-control" id="newPtIdentity" placeholder="Nhập số CCCD..." type="text" />
+                  <label class="form-label fw-semibold" for="newPtIdentity">Số CCCD</label>
+                  <input class="form-control" id="newPtIdentity" placeholder="Nhập số CCCD..." type="text" maxlength="20" data-validation="identity" />
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label fw-semibold" for="newPtRoom">Phân phòng khám <span class="required-mark">*</span></label>
+                  <select class="form-select" id="newPtRoom" required=""><option value="">-- Chọn phòng khám --</option></select>
                 </div>
                 <div class="col-md-12">
-                  <label class="form-label fw-semibold">Địa chỉ thường trú</label>
-                  <input class="form-control" id="newPtAddress" placeholder="Số nhà, Đường, Phường/Xã, Quận/Huyện..." type="text" />
+                  <label class="form-label fw-semibold" for="newPtAddress">Địa chỉ thường trú</label>
+                  <input class="form-control" id="newPtAddress" placeholder="Số nhà, Đường, Phường/Xã, Quận/Huyện..." type="text" maxlength="255" />
                 </div>
+                
                 <div class="col-md-6">
-                  <label class="form-label fw-semibold">Phân phòng khám (*)</label>
-                  <select class="form-select" id="newPtRoom"><option value="">-- Chọn phòng khám --</option></select>
-                </div>
-                <div class="col-md-6">
-                  <label class="form-label fw-semibold">Lý do đến khám</label>
-                  <input class="form-control" id="newPtReason" placeholder="Đau đầu, sốt, tái khám..." type="text" />
+                  <label class="form-label fw-semibold" for="newPtReason">Lý do đến khám</label>
+                  <input class="form-control" id="newPtReason" placeholder="Đau đầu, sốt, tái khám..." type="text" maxlength="500" />
                 </div>
               </div>
             </form>
@@ -218,7 +221,6 @@
         }
       })();
     </script>
-    <footer th:replace="~{fragments/footer :: footer}"></footer>
     <th:block th:replace="~{fragments/footer :: scripts}"></th:block>
   </body>
 </html>

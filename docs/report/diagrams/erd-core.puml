@@ -1,0 +1,23 @@
+@startuml
+title ERD các thực thể chính
+rectangle "roles\n--\nid (PK)\ncode" as roles
+rectangle "users\n--\nid (PK)\nrole_id (FK)" as users
+rectangle "patients\n--\nid (PK)\npatient_code" as patients
+rectangle "examination_rooms\n--\nid (PK)\ndepartment_id (FK)" as rooms
+rectangle "visits\n--\nid (PK)\npatient_id (FK)\nroom_id (FK)\nstatus" as visits
+rectangle "examinations\n--\nid (PK)\nvisit_id (FK)" as examinations
+rectangle "prescriptions\n--\nid (PK)\nvisit_id (FK)" as prescriptions
+rectangle "prescription_details\n--\nid (PK)\nprescription_id (FK)\nmedicine_id (FK)" as details
+rectangle "medicines\n--\nid (PK)\ninventory_type\nunit" as medicines
+rectangle "medicine_batches\n--\nid (PK)\nmedicine_id (FK)\nquantity" as batches
+rectangle "invoices\n--\nid (PK)\nvisit_id (FK)" as invoices
+roles --> users
+patients --> visits
+rooms --> visits
+visits --> examinations
+visits --> prescriptions
+prescriptions --> details
+medicines --> details
+medicines --> batches
+visits --> invoices
+@enduml

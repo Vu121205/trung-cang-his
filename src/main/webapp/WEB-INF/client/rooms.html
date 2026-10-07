@@ -18,7 +18,7 @@
               <div class="card-body">
                 <form id="roomForm" onsubmit="saveRoomSelection(event)">
                   <div class="mb-3">
-                    <label class="form-label" for="roomDepartment">Khoa</label>
+                    <label class="form-label" for="roomDepartment">Khoa <span class="required-mark">*</span></label>
                     <select id="roomDepartment" class="form-select" required onchange="updateRoomOptions()">
                       <option value="">-- Chọn khoa --</option>
                       <option th:if="${canExamine}" value="Khoa khám bệnh">Khoa khám bệnh</option>
@@ -28,7 +28,7 @@
                     </select>
                   </div>
                   <div class="mb-3">
-                    <label class="form-label" for="roomName">Phòng</label>
+                    <label class="form-label" for="roomName">Phòng <span class="required-mark">*</span></label>
                     <select id="roomName" class="form-select" required disabled>
                       <option value="">-- Chọn khoa trước --</option>
                     </select>
@@ -64,6 +64,10 @@
 
         function saveRoomSelection(event) {
           event.preventDefault();
+          const form = document.getElementById('roomForm');
+          if (typeof HisValidation !== 'undefined' && !HisValidation.validate(form)) {
+            return;
+          }
           const department = document.getElementById('roomDepartment').value;
           const room = document.getElementById('roomName').value;
           const destinations = {
@@ -84,7 +88,6 @@
         }
       </script>
     </main>
-    <footer th:replace="~{fragments/footer :: footer}"></footer>
     <th:block th:replace="~{fragments/footer :: scripts}"></th:block>
   </body>
 </html>

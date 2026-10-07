@@ -6,7 +6,7 @@ async function loadExaminationData() {
   const [diagnoses, medicines, rooms] = await Promise.all([apiRequest('/diagnoses'), apiRequest('/medicines'), apiRequest('/examination-rooms')]);
   icdCatalog = Object.fromEntries(diagnoses.filter((item) => item.status === 'ACTIVE').map((item) => [item.icdCode, item.name]));
   medicineCatalog = medicines
-    .filter((item) => item.status === 'ACTIVE')
+    .filter((item) => item.status === 'ACTIVE' && (item.inventoryType || 'MEDICINE') === 'MEDICINE')
     .map((item) => ({
       id: item.id,
       name: item.name,
@@ -14,6 +14,9 @@ async function loadExaminationData() {
       unit: item.unit,
       hint: [item.strength, item.dosageForm].filter(Boolean).join(' · '),
     }));
+  supplyCatalog = medicines
+    .filter((item) => item.status === 'ACTIVE' && item.inventoryType === 'SUPPLY')
+    .map((item) => ({ id: item.id, code: item.code, name: item.name, unit: item.unit || '—', hint: [item.strength, item.dosageForm].filter(Boolean).join(' · ') }));
   examinationRooms = rooms.filter((room) => room.status === 'ACTIVE');
 }
 
@@ -30,10 +33,23 @@ async function persistExamination() {
   const medicines = lines.map((row) => ({
     medicineId: Number(row.dataset.medicineId),
     quantity: Number(row.querySelector('[data-quantity]').value),
+    dosage: String([...row.querySelectorAll('input[type="number"]')].slice(1).reduce((sum, input) => sum + (Number(input.value) || 0), 0)) + ' đơn vị/lần',
+    frequency: `${[...row.querySelectorAll('input[type="number"]')].slice(1).filter((input) => Number(input.value) > 0).length} lần/ngày`,
+    duration: `${Number(row.children[2].value) || 0} ngày`,
+    route: row.children[1].value,
+    instruction: row.querySelector('[data-instruction]').value.trim(),
+  }));
+  const supplyLines = [...document.querySelectorAll('#selectedSupplyList [data-supply-id]')];
+  const supplies = supplyLines.map((row) => ({
+    supplyId: Number(row.dataset.supplyId),
+    quantity: Number(row.querySelector('[data-quantity]').value),
     instruction: row.querySelector('[data-instruction]').value.trim(),
   }));
   if (medicines.some((item) => !Number.isInteger(item.quantity) || item.quantity < 1 || item.quantity > 10000 || !item.instruction)) {
-    return alert('Mỗi thuốc cần số lượng nguyên từ 1 đến 10000 và cách dùng.');
+    return alert('Mỗi thuốc cần số ngày, ít nhất một buổi dùng và cách dùng hợp lệ.');
+  }
+  if (supplies.some((item) => !Number.isInteger(item.quantity) || item.quantity < 1 || item.quantity > 10000 || !item.instruction)) {
+    return alert('Mỗi vật tư cần số ngày, ít nhất một buổi sử dụng và cách dùng hợp lệ.');
   }
   if (!flow.examinationRequestId) {
     flow.examinationRequestId = crypto.randomUUID();
@@ -71,6 +87,7 @@ async function persistExamination() {
         roomId: room.id,
         icdCode,
         medicines,
+        supplies,
         symptoms: document.getElementById('docSymptoms').value.trim(),
         medicalHistory: document.getElementById('docMedicalHistory').value.trim(),
         clinicalNote: document.getElementById('docClinicalNote').value.trim(),
@@ -78,7 +95,10 @@ async function persistExamination() {
         vitalSigns: Object.values(vitalSigns).some((value) => value !== null) ? vitalSigns : null,
       }),
     });
-    updatePatientFlow({ id: patientCode, name: result.visit.patientName }, 'awaiting_payment', flow.room);
+    const updatedFlow = updatePatientFlow({ id: patientCode, name: result.visit.patientName }, 'awaiting_payment', flow.room);
+    const allFlows = getPatientFlow();
+    allFlows[patientCode] = { ...updatedFlow, examinationId: result.visit.id, examinationRequestId: flow.examinationRequestId };
+    savePatientFlow(allFlows);
     showToast('Đã lưu hồ sơ vào lịch sử khám và chuyển bệnh nhân sang hàng chờ thanh toán.');
     setTimeout(() => {
       window.location.reload();
